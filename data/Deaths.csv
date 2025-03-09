@@ -1,0 +1,69 @@
+death_member,death_party_member,death_date,death_age,death_cause,death_district,death_unexpected
+Adam Benjamin Jr.,D,1982-09-07 00:00:00,47,Heart attack,IN01,1
+Benjamin S. Rosenthal,D,1983-01-04 00:00:00,59,Cancer,NY07,0
+C. Melvin Price,D,1988-04-22 00:00:00,83,Pancreatic cancer,IL21,0
+Carl D. Perkins,D,1984-08-03 00:00:00,71,Heart attack,KY07,1
+Claude Pepper,D,1989-05-30 00:00:00,88,Complications from nutritional deficiencies and malignancy,FL18,0
+Clement J. Zablocki,D,1983-12-03 00:00:00,71,Heart attack,WI04,1
+Dan Daniel,D,1988-01-23 00:00:00,73,Heart attack,VA05,1
+Edwin B. Forsythe,R,1984-03-29 00:00:00,68,Lung cancer,NJ13,0
+George M. O'Brien,R,1986-07-17 00:00:00,69,Prostate cancer,IL04,0
+Gillis W. Long,D,1985-01-20 00:00:00,61,Heart attack,LA08,1
+Harold L. Runnels,D,1980-08-05 00:00:00,56,Respiratory failure,NM02,0
+James J. Howard,D,1988-03-25 00:00:00,60,Heart attack,NJ03,1
+John Duncan Sr.,R,1988-06-21 00:00:00,69,Cancer,TX02,0
+John E. Grotberg,R,1986-11-15 00:00:00,61,Bronchial pneumonia and colon cancer,IL14,0
+John M. Ashbrook,R,1982-04-24 00:00:00,53,Peptic ulcer,OH17,1
+John M. Slack Jr.,D,1980-03-17 00:00:00,64,Heart attack,WV03,1
+Joseph P. Addabbo,D,1986-04-10 00:00:00,61,Seizure induced coma during treatment for bladder cancer,NY06,0
+Larkin I. Smith,R,1989-08-13 00:00:00,45,Plane crash,MI05,1
+Larry McDonald,D,1983-09-01 00:00:00,48,Shoot down of Korean Air Lines Flight 007 by Soviet Air Defence Forcesinterceptors on the orders of General Anatoly Kornukov,GA07,1
+Mickey Leland,D,1989-08-07 00:00:00,44,Plane crash,TX18,1
+Phillip Burton,D,1983-04-10 00:00:00,56,Thrombosis,CA05,1
+Sala Burton,D,1987-02-01 00:00:00,61,Colon cancer,CA05,0
+Stewart McKinney,R,1987-05-07 00:00:00,56,AIDS-complicated pneumocystis pneumonia,CO04,0
+Tennyson Guyer,R,1981-04-12 00:00:00,68,Heart attack,OH04,1
+William F. Nichols,D,1988-12-13 00:00:00,70,Heart attack,AL03,1
+William R. Cotter,D,1981-09-08 00:00:00,55,Pancreatic cancer,CO01,0
+Bill Emerson,R,1996-06-22 00:00:00,58,Lung cancer,MI08,0
+Dean Gallo,R,1994-11-06 00:00:00,58,Prostate cancer,NJ11,0
+Frank Tejeda,D,1997-01-30 00:00:00,51,Pneumoniafollowing treatment for brain tumor,TX28,0
+George Brown Jr.,D,1999-07-15 00:00:00,79,Infection following heart valve replacement,CA42,1
+Paul B. Henry,R,1993-07-31 00:00:00,51,Brain cancer,MI03,0
+Silvio Conte,R,1991-02-08 00:00:00,69,Prostate cancer,MA01,0
+Sonny Bono,R,1998-01-05 00:00:00,62,Skiing accident,CA44,1
+Steven Schiff,R,1998-03-25 00:00:00,51,Squamous-cell skin cancer,NM01,0
+Theodore S. Weiss,D,1992-09-14 00:00:00,64,Heart failure,NY17,1
+Walter B. Jones Sr.,D,1992-09-15 00:00:00,79,Natural causes,NC01,0
+Walter Capps,D,1997-10-28 00:00:00,63,Heart attack,CA22,1
+William Natcher,D,1994-03-29 00:00:00,84,Heart failure,KY02,1
+Bob Matsui,D,2005-01-01 00:00:00,63,Myelodysplastic syndrome,CA05,0
+Bruce Vento,D,2000-10-10 00:00:00,60,Mesothelioma,MI04,0
+Charlie Norwood,R,2007-02-13 00:00:00,65,Liver cancer,GA10,0
+Floyd Spence,R,2001-08-16 00:00:00,73,Cerebral thrombosis,SC02,1
+Herb Bateman,R,2000-09-11 00:00:00,72,Unspecified natural causes,VA01,0
+Jo Ann Davis,R,2007-10-06 00:00:00,57,Breast cancer,VA01,0
+Joe Moakley,D,2001-05-28 00:00:00,74,Myelodysplastic syndrome,MA09,0
+Juanita Millender-McDonald,D,2007-04-22 00:00:00,68,Colon cancer,CA37,0
+Julia Carson,D,2007-12-15 00:00:00,69,Lung cancer,IN07,0
+Julian Dixon,D,2000-12-08 00:00:00,66,Heart attack,CA32,1
+Norman Sisisky,D,2001-03-29 00:00:00,73,Lung cancer,VA04,0
+Patsy Mink,D,2002-09-28 00:00:00,74,Viral pneumoniafollowing chickenpox,HI02,1
+Paul Gillmor,R,2007-09-05 00:00:00,68,Fall down stairs,OH05,1
+Stephanie Tubbs Jones,D,2008-08-20 00:00:00,58,Cerebral hemorrhage,OH11,1
+Tom Lantos,D,2008-02-11 00:00:00,80,Esophageal cancer,CA12,0
+Alan Nunnelee,R,2015-02-06 00:00:00,56,Brain cancer,MI01,0
+Bill Young,R,2013-10-18 00:00:00,82,Multiple myeloma,FL13,0
+Donald M. Payne,D,2012-03-06 00:00:00,77,Colon cancer,NJ10,0
+Elijah Cummings,D,2019-10-17 00:00:00,68,Complications concerning long-standing health challenges,MA07,0
+John Murtha,D,2010-02-08 00:00:00,77,Infection following gallbladdersurgery,PA12,1
+Louise Slaughter,D,2018-03-16 00:00:00,88,Fall,NY25,1
+Mark Takai,D,2016-07-20 00:00:00,49,Pancreatic cancer,HI01,0
+Walter B. Jones Jr.,R,2019-02-10 00:00:00,76,Amyotrophic lateral sclerosis,NC03,0
+Alcee Hastings,D,2021-04-06 00:00:00,84,Pancreatic cancer,FL20,0
+Don Young,R,2022-03-18 00:00:00,88,Unspecified natural causes,AK01,0
+Donald McEachin,D,2022-11-28 00:00:00,61,Colorectal cancer,VA04,0
+Jackie Walorski,R,2022-08-03 00:00:00,58,Traffic collision,IN02,1
+Jim Hagedorn,R,2022-02-17 00:00:00,59,Kidney cancer,MI01,0
+John Lewis,D,2020-07-17 00:00:00,80,Pancreatic cancer,GA05,0
+Ron Wright,R,2021-02-07 00:00:00,67,COVID-19,TX06,1
