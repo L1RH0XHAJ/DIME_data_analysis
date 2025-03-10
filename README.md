@@ -19,7 +19,7 @@ On the other hand, the latter script merges four main inputs into one final data
 1. The contributions data coming from DIME (see [contribDB_1980.csv.gz to contribDB_2024.csv.gz](https://data.stanford.edu/dime)), omitted from repo because of size;
 2. The recipients data coming from DIME (see [dime_recipients_1979_2024.csv.gz](https://data.stanford.edu/dime)), omitted from repo because of size;
 3. Our self-constructed dataset of deaths and resignations, using special_elections.csv (see `\main\convert_html_to_csv.py`);
-4. A manually created general elections dataset for each year (cycle) from 1980 to 2024;
+4. A manually created general elections dataset for each year (cycle) from 1980 to 2024 (see `\data\election_dates.csv`);
 
 , and produces one final cleaned contribution-level dataset (`output_1`) and several other insightful district and cycle-level outputs (omitted from repo).
 
