@@ -1,6 +1,6 @@
 # DIME_data_analysis
 
-(Work under progress)
+(Work in progress)
 
 (Last update: March 9th, 2025)
 
