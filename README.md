@@ -4,7 +4,7 @@
 
 # Motivation
 
-This project is work faciliated for the research of [Matteo Broso](https://github.com/Mbroso21) and Dr. Tommaso Valletti. We merge various datasets from the extensive [DIME database](https://data.stanford.edu/dime) created by Dr Adam Bonica at Stanford University, which consist of contributions going to different political candidates (recipients) in the United States. We particularly focus on contributions going to candidates of the US House of Representatives. 
+This project is work faciliated for the research of [Matteo Broso](https://github.com/Mbroso21) and [Dr. Tommaso Valletti](https://profiles.imperial.ac.uk/t.valletti). We merge various datasets from the extensive [DIME database](https://data.stanford.edu/dime) created by Dr Adam Bonica at Stanford University, which consist of contributions going to different political candidates (recipients) in the United States. We particularly focus on contributions going to candidates of the US House of Representatives. 
 
 The authors hypothesise that in more competitive elections, firms and individuals tend to exert more influence via campaign contributions. The main goal of the authors' research paper is to understand how contribution patterns may differ between candidates in contested (i.e., more competitive) election districts and more one-sided ones. The authors utilise the plausibly exogenous variation in political competition induced by an incumbent’s death in the US House of Representatives elections. 
 
