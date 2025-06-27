@@ -65,8 +65,11 @@ Our main working directory (referred to as \parent in the code) consists of two 
 ## Running the code 
 
 Step 0: Make sure all libraries and data/files from the 'Dependencies' section are installed / downloaded and stored correctly in the right folder.
+
 Step 1: Run the first two scripts, which convert important recipient and district data from special_elections.html and new_district.html, respectively.
+
 Step 2: Run main.py, which creates the contribution-level data and a dictionary of variables and their description (OUTPUT_1.csv and OUTPUT_1_dict.csv) by merging together the DIME contributions and recipients data (contribDB_1980 to contribDB_2024 and dime_recipients_1979_2024) with our own dataset for candidates/recipients deaths (special_elections_final.csv) and dates of general elections in each year.
+
 Step 3: Run output.py, which to generate uses the outputs from main.py and creates district-cycle-level data for a set of important variables we use in our analysis (see OUTPUT_1_final_collapsed.csv and OUTPUT_1_final_collapsed_dict.csv).
 
 The latter script, run.py, runs all of these scripts in the given order: convert_html_to_csv.py, convert_html_to_csv_2.py, main.py, and outputs.py. 
