@@ -14,8 +14,7 @@ Created on Wed Feb 12 11:18:52 2025
 # pip install polars
 
 import os
-import inspect
-# import polars as pl
+# import inspect
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -35,8 +34,8 @@ import seaborn as sns
 # code_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 # If all fails define working folder manually and run the lines here
+# code_folder = "/Users/lirhoxhaj/Library/CloudStorage/OneDrive-ImperialCollegeLondon/Desktop/RA/Tommaso/Contributions_Paper/working_folder_lir/code"
 code_folder = r"C:\Users\lhoxhaj\OneDrive - Imperial College London\Desktop\RA\Tommaso\Contributions_Paper\working_folder_lir\code"
-code_folder = "/Users/lirhoxhaj/Library/CloudStorage/OneDrive-ImperialCollegeLondon/Desktop/RA/Tommaso/Contributions_Paper/working_folder_lir/code"
 
 # This is your working folder where folders '\code' and '\data' are saved
 parent_folder = os.path.dirname(code_folder)
@@ -325,7 +324,8 @@ print("  - Number of missing rows:", na_rows) # unmatched row because district n
 
 # - later_than_special
 # - days_to_nearest_death
-# - treat_1 and treat_2
+# - treat_1, treat_2, and treat_3
+# - btw_death_and_spec_1, btw_death_and_spec_2, and btw_death_and_spec_3
 
 ## 1. later_than_special
 
@@ -336,6 +336,9 @@ merged_df_3['date'] = pd.to_datetime(merged_df_3['date'], errors = 'coerce') # n
 merged_df_3['spec_election_date'] = pd.to_datetime(merged_df_3['spec_election_date'], errors = 'coerce') # need to use errors = 'coerce' to include incorrect dates
 merged_df_3['resign_date'] = pd.to_datetime(merged_df_3['resign_date']) # no errors here, because these dates were created manually in special_elections.csv!
 merged_df_3['death_date'] = pd.to_datetime(merged_df_3['death_date']) # no errors here, because these dates were created manually in special_elections.csv!
+# merged_df_3['gen_elect_date'] = pd.to_datetime(merged_df_3['gen_elect_date']) # no errors here, because these dates were created manually in special_elections.csv!
+merged_df_3['spec_gen_elect_date'] = pd.to_datetime(merged_df_3['spec_gen_elect_date']) # no errors here, because these dates were created manually in special_elections.csv!
+merged_df_3['death_gen_elect_date'] = pd.to_datetime(merged_df_3['death_gen_elect_date']) # no errors here, because these dates were created manually in special_elections.csv!
 merged_df_3['election_date_in_cycle'] = pd.to_datetime(merged_df_3['election_date_in_cycle']) # no errors here, because these dates were created manually in election_dates.csv!
 
 
@@ -393,7 +396,7 @@ print("Contributions going to special elections after special elections date:", 
 
 # Discrepancy! The contributions going to special elections according to Bonica's raw data are mostly coming before the special election date, although some 
 print()
-print("Number of contributions going to special elect")
+# print("Number of contributions going to special elect")
 
 
 #%%
@@ -497,7 +500,7 @@ plt.show()
 
 #%%
 
-## 3. treat_1 and treat_2
+## 3. treat_1, treat_2 and treat_3
 
 ## For each contribution in a district where an incumbent died:
 
@@ -512,13 +515,19 @@ plt.show()
 # NOTE: these are used in the OUTPUTS later
 special_elections_districts = special_elections.groupby('district')['spec_member'].nunique().reset_index()
 death_counts = special_elections[special_elections['cause_vacancy'] == 'Death'].groupby('district')['spec_member'].nunique().reset_index()
+death_counts_unique = special_elections[special_elections['cause_vacancy'] == 'Death']
 single_death_districts = death_counts[death_counts['spec_member'] == 1]['district'].tolist()
 multiple_death_districts = death_counts[death_counts['spec_member'] > 1]['district'].tolist()
-no_death_districts = special_elections[special_elections['cause_vacancy'] == 'Resigned']['district'].tolist()
+no_death_districts = special_elections[special_elections['cause_vacancy'] == 'Resigned'].groupby('district')['spec_member'].nunique().reset_index()
+no_death_districts_unique = special_elections[special_elections['cause_vacancy'] == 'Resigned']
+
 print("Total number of districts with special elections", len(special_elections_districts))
 print("Total number of districts with one death", len(single_death_districts))
 print("Total number of districts with multiple deaths", len(multiple_death_districts))
 print("Nr of districts with resignations", len(no_death_districts))
+print()
+print("Total number of deaths:", len(death_counts_unique))
+print("Total number of resignations:", len(no_death_districts_unique))
 
 # Create treat_1 (simple case)
 merged_df_3['treat_1'] = 0
@@ -539,7 +548,6 @@ for district in single_death_districts + multiple_death_districts:
             'treat_1'] = 1
     else:
         print(f"Warning: No death date found for district {district}")
-
 
 
 # Create treat_2 (complex case)
@@ -590,12 +598,47 @@ for district in single_death_districts + multiple_death_districts:
         print(f"{district} not found in single_death_districts nor in multiple_death_districts")
 
 
+# Create treat_3 (single death districts only treated within same cycle, multiple district logic is the same as treat_2)
+merged_df_3['treat_3'] = 0
+
+for district in single_death_districts + multiple_death_districts:
+    district_mask = merged_df_3['district'] == district
+    
+    if district in single_death_districts:
+        print(f"{district} is single death")
+        # Get the death date and cycle for this district
+        district_death_info = merged_df_3[
+            (merged_df_3['district'] == district) & 
+            (merged_df_3['death_date'].notna())
+        ][['death_date', 'spec_cycle']].drop_duplicates()
+        
+        if not district_death_info.empty:
+            death_date = district_death_info.iloc[0]['death_date']
+            death_cycle = district_death_info.iloc[0]['spec_cycle']
+            
+            # Set treat_3 = 1 only if date > death_date AND in the same cycle
+            merged_df_3.loc[
+                (merged_df_3['district'] == district) & 
+                (merged_df_3['date'] > death_date) &
+                (merged_df_3['cycle'] == death_cycle), 
+                'treat_3'] = 1
+        else:
+            print(f"Warning: No death date found for district {district}")
+            
+    elif district in multiple_death_districts:
+        print(f"{district} is multiple death")
+        # For multiple death districts, replicate treat_2
+        merged_df_3.loc[district_mask, 'treat_3'] = merged_df_3.loc[district_mask, 'treat_2']
+    else:
+        print(f"{district} not found in single_death_districts nor in multiple_death_districts")
+
+
 # checking ...
 def plot_scatter(picked_district, treatment):
     merged_df_3_sample = merged_df_3[merged_df_3['district'] == picked_district]
     death_dates = merged_df_3_sample['death_date'].dropna().unique()
     
-    # Define election_dates here so it's available in both branches
+    # Define election_dates here so it's available in all branches
     election_dates = merged_df_3_sample['election_date_in_cycle'].dropna().unique()
     
     if treatment == 'treat_1':
@@ -609,7 +652,7 @@ def plot_scatter(picked_district, treatment):
         
         # Add lines for election dates if you have them
         for i, election_date in enumerate(election_dates):
-            plt.axvline(x=election_date, color='green', linestyle='--', linewidth=2,
+            plt.axvline(x=election_date, color='green', linestyle='--', linewidth=2, alpha=0.5,
                         label='Election date' if i == 0 else "_")
         
         plt.title(f'Scatterplot: treat_1 across time (for {picked_district})')
@@ -618,8 +661,8 @@ def plot_scatter(picked_district, treatment):
         plt.legend()
         plt.show()
     
-    else:
-        # Similar approach for treat_2
+    elif treatment == 'treat_2':
+        # Plot for treat_2
         plt.figure(figsize=(10, 6))
         plt.scatter(merged_df_3_sample['date'], merged_df_3_sample['treat_2'], c='red', label = 'Contributions', s = 0.5)
         for i, death_date in enumerate(death_dates):
@@ -627,28 +670,56 @@ def plot_scatter(picked_district, treatment):
                         label='Death date' if i == 0 else "_")
         
         for i, election_date in enumerate(election_dates):
-            plt.axvline(x=election_date, color='green', linestyle='--', linewidth=2,
+            plt.axvline(x=election_date, color='green', linestyle='--', linewidth=2, alpha=0.5,
                         label='Election date' if i == 0 else "_")
         
         plt.title(f'Scatterplot: treat_2 across time (for {picked_district})')
         plt.xlabel('Date')
         plt.ylabel('Treatment')
         plt.legend()
-        plt.show()    
+        plt.show()
+    
+    elif treatment == 'treat_3':
+        # Plot for treat_3
+        plt.figure(figsize=(10, 6))
+        plt.scatter(merged_df_3_sample['date'], merged_df_3_sample['treat_3'], c='orange', label = 'Contributions', s = 0.5)
+        for i, death_date in enumerate(death_dates):
+            plt.axvline(x=death_date, color='purple', linewidth=3, 
+                        label='Death date' if i == 0 else "_")
+        
+        for i, election_date in enumerate(election_dates):
+            plt.axvline(x=election_date, color='green', linestyle='--', linewidth=2, alpha=0.5,
+                        label='Election date' if i == 0 else "_")
+        
+        plt.title(f'Scatterplot: treat_3 across time (for {picked_district})')
+        plt.xlabel('Date')
+        plt.ylabel('Treatment')
+        plt.legend()
+        plt.show()
 
 # single death example
 plot_scatter('AL03', 'treat_1')
 plot_scatter('AL03', 'treat_2')
+plot_scatter('AL03', 'treat_3')
+
+plot_scatter('MS05', 'treat_1')
+plot_scatter('MS05', 'treat_2')
+plot_scatter('MS05', 'treat_3')
+
+
 # multiple death example
 plot_scatter('VA01', 'treat_1')
 plot_scatter('VA01', 'treat_2')
+plot_scatter('VA01', 'treat_3')
+
 plot_scatter('CA05', 'treat_1')
 plot_scatter('CA05', 'treat_2')
+plot_scatter('CA05', 'treat_3')
 
 
     
 
-# # Testing...
+# Testing...
 # def print_treatment_example(district, treatment_var):
 #     print(f"\nExample for district {district}:")
 #     print("Deaths in this district:")
@@ -669,8 +740,142 @@ plot_scatter('CA05', 'treat_2')
 # # Print examples
 # print("\nSINGLE DEATH DISTRICT:")
 # print_treatment_example("IL21", 'treat_1')
+# print_treatment_example("IL21", 'treat_2')
+# print_treatment_example("IL21", 'treat_3')
 # print("\nMULTIPLE DEATH DISTRICT:")
 # print_treatment_example("CA05", 'treat_2')
+
+
+#%%
+
+## 4. btw_death_and_spec_1, btw_death_and_spec_2, and btw_death_and_spec_3
+
+# Create btw_death_and_spec_1 (treat_1 = 1 AND date between death_date and spec_election_date)
+merged_df_3['btw_death_and_spec_1'] = 0
+merged_df_3.loc[
+    (merged_df_3['treat_1'] == 1) & 
+    (merged_df_3['date'] > merged_df_3['death_date']) & 
+    (merged_df_3['date'] < merged_df_3['spec_election_date']),
+    'btw_death_and_spec_1'
+] = 1
+
+# Create btw_death_and_spec_2 (treat_2 = 1 AND date between death_date and spec_election_date)
+merged_df_3['btw_death_and_spec_2'] = 0
+merged_df_3.loc[
+    (merged_df_3['treat_2'] == 1) & 
+    (merged_df_3['date'] > merged_df_3['death_date']) & 
+    (merged_df_3['date'] < merged_df_3['spec_election_date']),
+    'btw_death_and_spec_2'
+] = 1
+
+# Create btw_death_and_spec_3 (treat_3 = 1 AND date between death_date and spec_election_date)
+merged_df_3['btw_death_and_spec_3'] = 0
+merged_df_3.loc[
+    (merged_df_3['treat_3'] == 1) & 
+    (merged_df_3['date'] > merged_df_3['death_date']) & 
+    (merged_df_3['date'] < merged_df_3['spec_election_date']),
+    'btw_death_and_spec_3'
+] = 1
+
+
+def plot_scatter_2(picked_district, treatment):
+    merged_df_3_sample = merged_df_3[merged_df_3['district'] == picked_district]
+    death_dates = merged_df_3_sample['death_date'].dropna().unique()
+    
+    # Define election_dates and special election dates
+    election_dates = merged_df_3_sample['election_date_in_cycle'].dropna().unique()
+    spec_election_dates = merged_df_3_sample['spec_election_date'].dropna().unique()
+    
+    if treatment == 'btw_death_and_spec_1':
+        # Plot for btw_death_and_spec_1
+        plt.figure(figsize=(10, 6))
+        plt.scatter(merged_df_3_sample['date'], merged_df_3_sample['btw_death_and_spec_1'], c='blue', label='Contributions', s=0.5)
+        # Add a vertical line for each death date
+        for i, death_date in enumerate(death_dates):
+            plt.axvline(x=death_date, color='purple', linewidth=3, 
+                        label='Death date' if i == 0 else "_")
+        
+        # Add lines for regular election dates
+        for i, election_date in enumerate(election_dates):
+            plt.axvline(x=election_date, color='green', linestyle='--', linewidth=2, alpha=0.5,
+                        label='Election date' if i == 0 else "_")
+        
+        # Add lines for special election dates
+        for i, spec_election_date in enumerate(spec_election_dates):
+            plt.axvline(x=spec_election_date, color='red', linestyle=':', linewidth=2,
+                        label='Special election date' if i == 0 else "_")
+        
+        plt.title(f'Scatterplot: btw_death_and_spec_1 across time (for {picked_district})')
+        plt.xlabel('Date')
+        plt.ylabel('Treatment')
+        plt.legend()
+        plt.show()
+    
+    elif treatment == 'btw_death_and_spec_2':
+        # Plot for btw_death_and_spec_2
+        plt.figure(figsize=(10, 6))
+        plt.scatter(merged_df_3_sample['date'], merged_df_3_sample['btw_death_and_spec_2'], c='red', label='Contributions', s=0.5)
+        for i, death_date in enumerate(death_dates):
+            plt.axvline(x=death_date, color='purple', linewidth=3, 
+                        label='Death date' if i == 0 else "_")
+        
+        for i, election_date in enumerate(election_dates):
+            plt.axvline(x=election_date, color='green', linestyle='--', linewidth=2, alpha=0.5,
+                        label='Election date' if i == 0 else "_")
+        
+        for i, spec_election_date in enumerate(spec_election_dates):
+            plt.axvline(x=spec_election_date, color='red', linestyle=':', linewidth=2,
+                        label='Special election date' if i == 0 else "_")
+        
+        plt.title(f'Scatterplot: btw_death_and_spec_2 across time (for {picked_district})')
+        plt.xlabel('Date')
+        plt.ylabel('Treatment')
+        plt.legend()
+        plt.show()
+    
+    elif treatment == 'btw_death_and_spec_3':
+        # Plot for btw_death_and_spec_3
+        plt.figure(figsize=(10, 6))
+        plt.scatter(merged_df_3_sample['date'], merged_df_3_sample['btw_death_and_spec_3'], c='orange', label='Contributions', s=0.5)
+        for i, death_date in enumerate(death_dates):
+            plt.axvline(x=death_date, color='purple', linewidth=3, 
+                        label='Death date' if i == 0 else "_")
+        
+        for i, election_date in enumerate(election_dates):
+            plt.axvline(x=election_date, color='green', linestyle='--', linewidth=2, alpha=0.5,
+                        label='Election date' if i == 0 else "_")
+        
+        for i, spec_election_date in enumerate(spec_election_dates):
+            plt.axvline(x=spec_election_date, color='red', linestyle=':', linewidth=2,
+                        label='Special election date' if i == 0 else "_")
+        
+        plt.title(f'Scatterplot: btw_death_and_spec_3 across time (for {picked_district})')
+        plt.xlabel('Date')
+        plt.ylabel('Treatment')
+        plt.legend()
+        plt.show()
+
+# single death example
+plot_scatter_2('AL03', 'btw_death_and_spec_1')
+plot_scatter_2('AL03', 'btw_death_and_spec_2')
+plot_scatter_2('AL03', 'btw_death_and_spec_3')
+plot_scatter_2('MS05', 'btw_death_and_spec_1')
+plot_scatter_2('MS05', 'btw_death_and_spec_2')
+plot_scatter_2('MS05', 'btw_death_and_spec_3')
+
+# case where spec_elect_date = gen_elect_date
+plot_scatter_2('IL04', 'btw_death_and_spec_1')
+plot_scatter_2('IL04', 'btw_death_and_spec_2')
+plot_scatter_2('IL04', 'btw_death_and_spec_3')
+
+
+# multiple death example
+# plot_scatter_2('VA01', 'btw_death_and_spec_1')
+# plot_scatter_2('VA01', 'btw_death_and_spec_2')
+# plot_scatter_2('VA01', 'btw_death_and_spec_3')
+plot_scatter_2('CA05', 'btw_death_and_spec_1')
+plot_scatter_2('CA05', 'btw_death_and_spec_2')
+plot_scatter_2('CA05', 'btw_death_and_spec_3')
 
 
 
@@ -719,47 +924,47 @@ cols = sort_vars + [col for col in OUTPUT_1.columns if col not in sort_vars]
 OUTPUT_1 = OUTPUT_1[cols]
 
 
-## OUTPUT_0: a Cartesian product of unique values of district and cycles (useful for merging with other OUTPUT data)
-print("Processing OUTPUT_0...")
+# ## OUTPUT_0: a Cartesian product of unique values of district and cycles (useful for merging with other OUTPUT data)
+# print("Processing OUTPUT_0...")
 
-unique_districts = OUTPUT_1['district'].dropna().unique()
-unique_cycles = OUTPUT_1['cycle'].dropna().unique()
-unique_parties = [100, 200] # hard coding this for Dems and Reps only
-parties_list = []
-districts_list = []
-cycles_list = []
+# unique_districts = OUTPUT_1['district'].dropna().unique()
+# unique_cycles = OUTPUT_1['cycle'].dropna().unique()
+# unique_parties = [100, 200] # hard coding this for Dems and Reps only
+# parties_list = []
+# districts_list = []
+# cycles_list = []
 
-for district in unique_districts:
-    for cycle in unique_cycles:
-        districts_list.append(district)
-        cycles_list.append(cycle)
+# for district in unique_districts:
+#     for cycle in unique_cycles:
+#         districts_list.append(district)
+#         cycles_list.append(cycle)
 
-OUTPUT_0 = pd.DataFrame({
-    'district': districts_list,
-    'cycle': cycles_list
-})
+# OUTPUT_0 = pd.DataFrame({
+#     'district': districts_list,
+#     'cycle': cycles_list
+# })
 
-OUTPUT_0 = OUTPUT_0.sort_values(['district', 'cycle']).reset_index(drop=True)
+# OUTPUT_0 = OUTPUT_0.sort_values(['district', 'cycle']).reset_index(drop=True)
 
-# Clean list
-parties_list = []
-districts_list = []
-cycles_list = []
+# # Clean list
+# parties_list = []
+# districts_list = []
+# cycles_list = []
 
-for district in unique_districts:
-    for cycle in unique_cycles:
-        for party in unique_parties:
-            districts_list.append(district)
-            cycles_list.append(cycle)
-            parties_list.append(party)
+# for district in unique_districts:
+#     for cycle in unique_cycles:
+#         for party in unique_parties:
+#             districts_list.append(district)
+#             cycles_list.append(cycle)
+#             parties_list.append(party)
 
-OUTPUT_0_2 = pd.DataFrame({
-    'district': districts_list,
-    'cycle': cycles_list,
-    'party': parties_list
-})
+# OUTPUT_0_2 = pd.DataFrame({
+#     'district': districts_list,
+#     'cycle': cycles_list,
+#     'party': parties_list
+# })
 
-OUTPUT_0_2 = OUTPUT_0_2.sort_values(['district', 'cycle', 'party']).reset_index(drop=True)
+# OUTPUT_0_2 = OUTPUT_0_2.sort_values(['district', 'cycle', 'party']).reset_index(drop=True)
 
 ## OUTPUT_1_dict: A dictionary of OUTPUT_1 variables, their description and their source
     
@@ -1443,10 +1648,11 @@ for var_name, attributes in OUTPUT_1_dict.items():
 
 OUTPUT_1_dict_df = pd.DataFrame(rows)
 
+#%%
 # Saving datasets for usage in other script
 print("Saving OUTPUT_0, OUTPUT_0_2, OUTPUT_1, OUTPUT_1_corp, and OUTPUT_1_ind")
-OUTPUT_0.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_0.csv"), index = False)
-OUTPUT_0_2.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_0_2.csv"), index = False)
+# OUTPUT_0.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_0.csv"), index = False)
+# OUTPUT_0_2.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_0_2.csv"), index = False)
 OUTPUT_1.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_1.csv"), index = False)
 OUTPUT_1[OUTPUT_1['contributor.type'] == 'C'].to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_1_corp.csv"), index = False)
 OUTPUT_1[OUTPUT_1['contributor.type'] == 'I'].to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_1_ind.csv"), index = False)

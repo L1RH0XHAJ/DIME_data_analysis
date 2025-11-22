@@ -24,11 +24,10 @@ Created on Wed Feb 12 11:18:52 2025
 # pip install polars
 
 import os
-import inspect
-# import polars as pl
 import pandas as pd
 import numpy as np
-from pathlib import Path
+import importlib.util
+import sys
 
 #%%
 
@@ -43,7 +42,7 @@ from pathlib import Path
 # code_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 
 # If all fails define working folder manually and run the lines here
-code_folder = r"C:\Users\lhoxhaj\OneDrive - Imperial College London\Desktop\RA\Tommaso\Contributions_Paper\working_folder_lir\code"
+# code_folder = r"C:\Users\lhoxhaj\OneDrive - Imperial College London\Desktop\RA\Tommaso\Contributions_Paper\working_folder_lir\code"
 code_folder = "/Users/lirhoxhaj/Library/CloudStorage/OneDrive-ImperialCollegeLondon/Desktop/RA/Tommaso/Contributions_Paper/working_folder_lir/code"
 
 # This is your working folder where folders '\code' and '\data' are saved
@@ -58,48 +57,65 @@ print("Data folder:", data_folder, "\n")
 
 #%%
 
+### GENERAL PURPOSE FUNCTIONS
+
+# See how many times each combination appears
+def display_duplicates(df, varlist):
+    df_filter = df.groupby(varlist).size()
+    # Filter to show only combinations that appear more than once
+    print(df_filter[df_filter > 1])
+
+
+#%%
+
 ### READING DATASETS
 
 
-## OUTPUT_0: a Cartesian product of unique values of district and cycles (useful for merging with other OUTPUT data)
-## OUTPUT_0_2: similar to OUTPUT_0, but has an additional categorisation by party as well
-print("Reading OUTPUT_0 and OUTPUT_0_2...")
+# ## OUTPUT_0: a Cartesian product of unique values of district and cycles (useful for merging with other OUTPUT data)
+# ## OUTPUT_0_2: similar to OUTPUT_0, but has an additional categorisation by party as well
+# print("Reading OUTPUT_0 and OUTPUT_0_2...")
 
-OUTPUT_0 = pd.read_csv(
-    data_folder + "/OUTPUTS/OUTPUT_0.csv", 
-    encoding='latin-1'
-    )
+# OUTPUT_0 = pd.read_csv(
+#     data_folder + "/OUTPUTS/OUTPUT_0.csv", 
+#     encoding='latin-1'
+#     )
 
-OUTPUT_0_2 = pd.read_csv(
-    data_folder + "/OUTPUTS/OUTPUT_0_2.csv", 
-    encoding='latin-1'
-    )
+# OUTPUT_0_2 = pd.read_csv(
+#     data_folder + "/OUTPUTS/OUTPUT_0_2.csv", 
+#     encoding='latin-1'
+#     )
 
 ## OUTPUT 1: contribution-day level dataset
 print("Reading OUTPUT_1...")
 
 OUTPUT_1 = pd.read_csv(
-    data_folder + "/OUTPUTS/OUTPUT_1.csv", 
+    os.path.join(data_folder, "OUTPUTS/OUTPUT_1.csv"), 
     encoding='latin-1'
     )
 
 ## Special elections data and death districts
 print("Reading special elections data...")
-special_elections = pd.read_csv(data_folder + "/special_elections_final.csv", encoding='latin-1')
+special_elections = pd.read_csv(os.path.join(data_folder, "special_elections_final.csv"), encoding='latin-1')
 
 special_elections_districts = special_elections.groupby('district')['spec_member'].nunique().reset_index()
 death_counts = special_elections[special_elections['cause_vacancy'] == 'Death'].groupby('district')['spec_member'].nunique().reset_index()
+death_counts_unique = special_elections[special_elections['cause_vacancy'] == 'Death']
 single_death_districts = death_counts[death_counts['spec_member'] == 1]['district'].tolist()
 multiple_death_districts = death_counts[death_counts['spec_member'] > 1]['district'].tolist()
-no_death_districts = special_elections[special_elections['cause_vacancy'] == 'Resigned']['district'].tolist()
+no_death_districts = special_elections[special_elections['cause_vacancy'] == 'Resigned'].groupby('district')['spec_member'].nunique().reset_index()
+no_death_districts_unique = special_elections[special_elections['cause_vacancy'] == 'Resigned']
+
 print("Total number of districts with special elections", len(special_elections_districts))
 print("Total number of districts with one death", len(single_death_districts))
 print("Total number of districts with multiple deaths", len(multiple_death_districts))
 print("Nr of districts with resignations", len(no_death_districts))
+print()
+print("Total number of deaths:", len(death_counts_unique))
+print("Total number of resignations:", len(no_death_districts_unique))
 
 ## Manually created general elections dataset for each year (cycle) in our dataset
 print("Reading elections dates data...")
-election_dates_df = pd.read_csv(data_folder + "/election_dates.csv", encoding='latin-1')
+election_dates_df = pd.read_csv(os.path.join(data_folder, "election_dates.csv"), encoding='latin-1')
 
 #%%
 
@@ -107,23 +123,42 @@ election_dates_df = pd.read_csv(data_folder + "/election_dates.csv", encoding='l
 #     1. MIT_eMIT elections data
 #     2. new_districts_df: newly created districts
 
-## 1. MIT_eMIT US House 1976 - 2022 elections data (source: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2)
-print("Reading MIT US House 1976 - 2022 elections data...")
-gen_elect_df = pd.read_csv(data_folder + "/1976-2022-house.csv", encoding='latin-1')
+## 1. MIT_eMIT US House 1976 - 2024 elections data (source: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2)
+# print("Reading MIT US House 1976 - 2022 elections data...")
+# gen_elect_df = pd.read_csv(data_folder + "/1976-2022-house.csv", encoding='latin-1')
+print("Reading MIT US House 1976 - 2024 elections data...")
+gen_elect_df = pd.read_csv(os.path.join(data_folder, "1976-2024-house.csv"), encoding='utf-8')
 
 # Renaming columns
 gen_elect_df = gen_elect_df.rename(columns = {'year' : 'cycle'})
 
+gen_elect_df['cycle'] = pd.to_numeric(gen_elect_df['cycle'], errors='coerce')  # will convert None values to NaN
+
 # Dropping rows
 gen_elect_df = gen_elect_df[gen_elect_df['cycle'].isin(OUTPUT_1['cycle'].unique())] # cycle in OUTPUT_1
 gen_elect_df = gen_elect_df[gen_elect_df['stage']=='GEN'] # very few observations for primary ('PRI'), no point in using them
-gen_elect_df = gen_elect_df[gen_elect_df['special']!='True'] # very few observations for special elections
-gen_elect_df = gen_elect_df[gen_elect_df['runoff']!='True'] # very few observations for runoff elections
-gen_elect_df = gen_elect_df[(gen_elect_df['party']=='DEMOCRAT') | (gen_elect_df['party']=='REPUBLICAN')] # only dems and reps
+gen_elect_df = gen_elect_df[gen_elect_df['special']!= True] # very few observations for special elections
+gen_elect_df = gen_elect_df[gen_elect_df['runoff']!= True] # very few observations for runoff elections
+gen_elect_df = gen_elect_df.drop(columns = ['runoff'])
+gen_elect_df['runoff'] = False # Assuming everything else is not a runoff
+# gen_elect_df = gen_elect_df[(gen_elect_df['party']=='DEMOCRAT') | (gen_elect_df['party']=='REPUBLICAN')] # only dems and reps
+# print(gen_elect_df['cycle'].value_counts())
+print(gen_elect_df['cycle'].unique())
 
 # Replacing values
-gen_elect_df.loc[gen_elect_df['party'] == 'DEMOCRAT', 'party'] = 100
-gen_elect_df.loc[gen_elect_df['party'] == 'REPUBLICAN', 'party'] = 200
+# print(gen_elect_df['party'].value_counts())
+
+gen_elect_df['party_2'] = 300 # all others
+gen_elect_df.loc[gen_elect_df['party'] == 'DEMOCRAT', 'party_2'] = 100
+gen_elect_df.loc[gen_elect_df['party'] == 'REPUBLICAN', 'party_2'] = 200
+# gen_elect_df.loc[~gen_elect_df['party'].isin([100, 200]), 'party'] = 300 # other
+# print(gen_elect_df['party'].value_counts())
+# print(gen_elect_df['party_2'].value_counts())
+
+gen_elect_df = gen_elect_df.drop(columns = ['party'])
+gen_elect_df = gen_elect_df.rename(columns = {'party_2':'party'})
+print(gen_elect_df['party'].value_counts())
+
 gen_elect_df['party'] = pd.to_numeric(gen_elect_df['party'], errors='coerce') # will convert None values to NaN
 
 # Authors code at-large districts with 0, in the other datasets they are saved as 01 (e.g., for Alaska 'AK01')
@@ -145,18 +180,174 @@ gen_elect_df = gen_elect_df.drop(columns = ['state', 'state_po', 'state_fips', '
                                             'unofficial',
                                             'version', 'district_number'])
 
+# display_duplicates(gen_elect_df, ['district', 'cycle', 'party', 'candidate'])
+
+
+# Checking how many unique values of totalvotes for each district-cycle there, should select highest (CHECK ONLINE)
+unique_counts = gen_elect_df.groupby(['district', 'cycle'])['totalvotes'].nunique().reset_index()
+unique_counts.columns = ['district', 'cycle', 'nunique_totalvotes']
+multiple_values = unique_counts[unique_counts['nunique_totalvotes'] > 1]
+print(f"\nDistrict-cycles with multiple totalvotes values:\n{multiple_values}")
+# LA05 2002 is a problem
+
+# Find the maximum totalvotes for each district-cycle, merge with main data and keep only rows that have max totalvotes for district-cycle
+max_totalvotes = gen_elect_df.groupby(['district', 'cycle'])['totalvotes'].max().reset_index()
+max_totalvotes.columns = ['district', 'cycle', 'max_totalvotes']
+gen_elect_df = gen_elect_df.merge(max_totalvotes, on=['district', 'cycle'], how='left')
+gen_elect_df = gen_elect_df[gen_elect_df['totalvotes'] == gen_elect_df['max_totalvotes']]
+gen_elect_df = gen_elect_df.drop('max_totalvotes', axis=1)
+
+# Manually fixing values (wrong in raw data)
+gen_elect_df.loc[
+    (gen_elect_df['district'] == 'IN02') & 
+    (gen_elect_df['cycle'] == 2002) & 
+    (gen_elect_df['candidate'] == 'WRITEIN'),
+    'candidatevotes'
+] = 12 # was originally 6
+
+gen_elect_df.loc[
+    (gen_elect_df['district'] == 'CT01') & 
+    (gen_elect_df['cycle'] == 2016) & 
+    (gen_elect_df['candidate'] == 'WRITEIN'),
+    'candidatevotes'
+] = 2 # was originally 1
+
+
+# Get the party associated with the highest candidatevotes for each candidate
+main_party = gen_elect_df.loc[
+    gen_elect_df.groupby(['district', 'cycle', 'candidate'])['candidatevotes'].idxmax()
+][['district', 'cycle', 'candidate', 'party']]
+
+# Sum candidatevotes
+summed_df = gen_elect_df.groupby(['district', 'cycle', 'candidate']).agg({
+    'candidatevotes': 'sum',
+    # 'party': 'first',
+    'writein': 'first',
+    'totalvotes': 'first',
+    'fusion_ticket': 'first'
+}).reset_index()
+
+# Merge to get the main party
+gen_elect_df = summed_df.merge(main_party, on=['district', 'cycle', 'candidate'], how='left')
+
+
+votes_check = gen_elect_df.groupby(['district', 'cycle']).agg({
+    'candidatevotes': 'sum',
+    'totalvotes': 'first',
+}).reset_index()
+print(np.corrcoef(votes_check['candidatevotes'], votes_check['totalvotes']))
+check_maxtotalvotes = votes_check[votes_check['candidatevotes'] != votes_check['totalvotes']]
+print(check_maxtotalvotes)
+
+gen_elect_df_check = gen_elect_df.merge(
+    check_maxtotalvotes[['district', 'cycle']].drop_duplicates(),
+    on=['district', 'cycle'],
+    how='inner'
+)
+
+# Detailed verification for each district-cycle combination
+print("\n" + "="*80)
+print("Detailed check for each district-cycle combination:")
+print("="*80)
+
+for _, row in check_maxtotalvotes.iterrows():
+    district = row['district']
+    cycle = row['cycle']
+    expected_total = row['totalvotes']
+    actual_sum = row['candidatevotes']
+    
+    # Get all candidates for this district-cycle
+    district_cycle_data = gen_elect_df[
+        (gen_elect_df['district'] == district) & 
+        (gen_elect_df['cycle'] == cycle)
+    ]
+    
+    print(f"\nDistrict: {district}, Cycle: {cycle}")
+    print(f"Expected totalvotes: {expected_total:,.0f}")
+    print(f"Actual sum of candidatevotes: {actual_sum:,.0f}")
+    print(f"Difference: {expected_total - actual_sum:,.0f}")
+    print(f"Number of candidates: {len(district_cycle_data)}")
+    print("\nCandidate breakdown:")
+    # print(district_cycle_data[['candidate', 'candidatevotes', 'totalvotes']].to_string())
+    print("-"*80)
+
+
+# For each district-cycle in check_maxtotalvotes, overwrite totalvotes with sum of candidatevotes
+for _, row in check_maxtotalvotes.iterrows():
+    district = row['district']
+    cycle = row['cycle']
+    correct_total = row['candidatevotes']  # This is the sum from our check
+    
+    # Update all rows for this district-cycle
+    mask = (gen_elect_df['district'] == district) & (gen_elect_df['cycle'] == cycle)
+    gen_elect_df.loc[mask, 'totalvotes'] = correct_total
+    
+
+print(f"Updated totalvotes for {len(check_maxtotalvotes)} district-cycle combinations")
+
+# Verify
+votes_check_after = gen_elect_df.groupby(['district', 'cycle']).agg({
+    'candidatevotes': 'sum',
+    'totalvotes': 'first',
+}).reset_index()
+
+remaining_mismatches = votes_check_after[votes_check_after['candidatevotes'] != votes_check_after['totalvotes']]
+print(f"Remaining mismatches: {len(remaining_mismatches)}")
+
+
+
+## Final changes (problems with raw data)
+
+# IMPORTANT NOTE: cases when candidate votes (one candidate) = totalvotes (1 = 1) indicate uncontested candidate
+# For special case, MARIO DIAZ-BALART
+
+# Update candidatevotes only where it's currently -1
+gen_elect_df.loc[
+    (gen_elect_df['candidate'] == "MARIO DIAZ-BALART") & 
+    (gen_elect_df['candidatevotes'] == -1), 
+    'candidatevotes'
+] = 1
+
+# Update totalvotes only where it's currently -1
+gen_elect_df.loc[
+    (gen_elect_df['candidate'] == "MARIO DIAZ-BALART") & 
+    (gen_elect_df['totalvotes'] == -1), 
+    'totalvotes'
+] = 1
+
+print("Summary of candidatevotes\n", gen_elect_df['candidatevotes'].describe()) # checking
+print("Count of negative candidatevotes", len(gen_elect_df[gen_elect_df['candidatevotes'] < 0])) # checking
+print("Count of negative candidatevotes", len(gen_elect_df[gen_elect_df['totalvotes'] < 0])) # checking
+
+print(gen_elect_df[gen_elect_df['candidate'] == 'MARIO DIAZ-BALART'])
+
+
+
 # Creating variable for OUTPUT_6 (since every row is each candidate in each district-cycle, we don't need to pivot or do anything else with the data to generate this data)
 gen_elect_df['gen_vote_pct'] = gen_elect_df['candidatevotes'] / gen_elect_df['totalvotes']
+
+# We keep only dems and reps
+gen_elect_df = gen_elect_df[gen_elect_df['party'] != 300]
+
+## Checking if any duplicates
+# display_duplicates(gen_elect_df, ['district', 'cycle', 'party', 'candidate'])
+# display_duplicates(gen_elect_df, ['district', 'cycle', 'candidate'])
+
+print("Summary of gen_vote_pct\n", gen_elect_df['gen_vote_pct'].describe()) # checking
+
+
+#%%
 
 
 ## 2. Newly created districts data (from convert_html_to_csv_2.py)
 print("Reading data of newly created districts...")
-new_districts_df = pd.read_csv(data_folder + "/new_districts_filtered.csv", encoding='latin-1')
+# new_districts_df = pd.read_csv(data_folder + "/new_districts_filtered.csv", encoding='latin-1')
+new_districts_df = pd.read_csv(os.path.join(data_folder, "new_districts_filtered_all.csv"), encoding='latin-1')
 
 print("Processing new_districts_df_0...") # cartesian product of districts in new_districts_df and all cycles (all election years)
 
-unique_districts = new_districts_df['district'].dropna().unique()
-unique_cycles = list(range(1980, 2026, 2))
+unique_districts = new_districts_df['district'].dropna().unique()  # universe of districts
+unique_cycles = list(range(1980, 2026, 2))  # hard-coded
 districts_list = []
 cycles_list = []
 
@@ -185,41 +376,184 @@ new_districts_df = pd.merge(
 # Creating dummy real_data 
 new_districts_df['real_data'] = np.nan
 
-# 0, if cycle is before created_year and cycle is after discontinued_year
-new_districts_df.loc[
-    (new_districts_df['cycle'] < new_districts_df['created_year']) | 
-    (new_districts_df['cycle'] > new_districts_df['discontinued_year']), 
-    'real_data'] = 0
-
-# 1, if cycle is between created_year and discontinued_year
-new_districts_df.loc[
-    (new_districts_df['cycle'] >= new_districts_df['created_year']) | 
-    (new_districts_df['cycle'] <= new_districts_df['discontinued_year']), 
-    'real_data'] = 1
-
-# Special cases, which have alternate between 0 and 1 (have both created_year and discontinued_year)
-df_filtered = new_districts_df[~new_districts_df['created_year'].isna() & 
-                                     ~new_districts_df['discontinued_year'].isna()]
-
-if 'real_data' not in new_districts_df.columns:
-    new_districts_df['real_data'] = 0
-
-for idx in df_filtered.index:
+# For districts that always exist in 1980 - 2024 period
+for idx in new_districts_df.index:
     row = new_districts_df.loc[idx]
-    # Check if cycle is between created_year and discontinued_year (inclusive)
-    if row['cycle'] >= row['created_year'] and row['cycle'] <= row['discontinued_year']:
+    if row['exist_always'] == 1:
         new_districts_df.loc[idx, 'real_data'] = 1
     else:
-        new_districts_df.loc[idx, 'real_data'] = 0
+        continue
 
-# Filter data cycle in OUTPUT_2[cycle].unique() or less 
+for idx in new_districts_df.index:
+    row = new_districts_df.loc[idx]
+    if row['exist_always'] == 0:
+
+        # 0, if cycle is before created_year and cycle is after discontinued_year
+        new_districts_df.loc[
+            (new_districts_df['cycle'] < new_districts_df['created_year']) | 
+            (new_districts_df['cycle'] > new_districts_df['discontinued_year']), 
+            'real_data'] = 0
+        
+        # 1, if cycle is between created_year and discontinued_year
+        new_districts_df.loc[
+            (new_districts_df['cycle'] >= new_districts_df['created_year']) | 
+            (new_districts_df['cycle'] <= new_districts_df['discontinued_year']), 
+            'real_data'] = 1
+        
+        # Special cases, which have alternate between 0 and 1 (have both created_year and discontinued_year)
+        df_filtered = new_districts_df[~new_districts_df['created_year'].isna() & 
+                                             ~new_districts_df['discontinued_year'].isna()]
+        
+        if 'real_data' not in new_districts_df.columns:
+            new_districts_df['real_data'] = 0
+        
+        for idx in df_filtered.index:
+            row = new_districts_df.loc[idx]
+            # Check if cycle is between created_year and discontinued_year (inclusive)
+            if row['cycle'] >= row['created_year'] and row['cycle'] <= row['discontinued_year']:
+                new_districts_df.loc[idx, 'real_data'] = 1
+            else:
+                new_districts_df.loc[idx, 'real_data'] = 0
+
+
+# MT02 SPECIAL CASES (district discontinued and created within 1980 - 2024 period)
+# -> 2nd district: 1919–1993, 2023–present
+
+cycles_to_update = list(range(1992, 2022, 2))
+new_districts_df.loc[
+    (new_districts_df['district'] == 'MT02') & 
+    (new_districts_df['cycle'].isin(cycles_to_update)), 
+    'real_data'
+] = 0
+
+territorial_districts = ['AS01', 'DC01', 'GU01', 'MP01', 'PR01', 'VI01']
+
+new_districts_df['territorial'] = 0
+new_districts_df.loc[
+    new_districts_df['district'].isin(territorial_districts),
+    'territorial'
+] = 1
+
+# Checks
+
+# Filter data cycle in OUTPUT_1[cycle].unique()
+print("Filter data cycle in OUTPUT_1[cycle].unique()")
 new_districts_df = new_districts_df[new_districts_df['cycle'].isin(OUTPUT_1['cycle'].unique())]
 print("Earliest year", new_districts_df['cycle'].min())
 print("Latest year", new_districts_df['cycle'].max())
- 
-new_districts_df.to_csv(os.path.join(data_folder, "new_districts_filtered_2.csv"), index = False)
 
-new_districts_df = new_districts_df[['district', 'cycle', 'real_data']]
+new_districts_df_real1 = new_districts_df[new_districts_df['real_data'] == 1]
+new_districts_df_real1_and_terr0 = new_districts_df_real1[new_districts_df_real1['territorial'] == 0]
+
+print("Unique district count by cycle (all data)")
+print(new_districts_df.groupby('cycle')['district'].count())
+print("-" * 20)
+print("Unique district count by cycle (real_data == 1)")
+print(new_districts_df_real1.groupby('cycle')['district'].count())
+print("-" * 20)
+print("Unique district count by cycle (real_data == 1 & territorial == 0)")
+print(new_districts_df_real1_and_terr0.groupby('cycle')['district'].count())
+print("=" * 20)
+
+
+new_districts_df = new_districts_df[['district', 'cycle', 'real_data', 'territorial']]
+
+new_districts_df.to_csv(os.path.join(data_folder, "new_districts_filtered_universe.csv"), index = False)
+
+## new_districts_df_party: a Cartesian product of unique values of district and cycles and party
+print("Processing new_districts_df_by_party...")
+
+unique_districts = new_districts_df['district'].dropna().unique()
+unique_cycles = new_districts_df['cycle'].dropna().unique()
+unique_parties = [100, 200] # hard coding this for Dems and Reps only
+parties_list = []
+districts_list = []
+cycles_list = []
+
+for district in unique_districts:
+    for cycle in unique_cycles:
+        for party in unique_parties:
+            districts_list.append(district)
+            cycles_list.append(cycle)
+            parties_list.append(party)
+
+new_districts_df_party = pd.DataFrame({
+    'district': districts_list,
+    'cycle': cycles_list,
+    'party': parties_list
+})
+
+new_districts_df_party = new_districts_df_party.sort_values(['district', 'cycle', 'party']).reset_index(drop=True)
+
+# Adding real_data and territorial
+new_districts_df_party = pd.merge(
+    new_districts_df_party,
+    new_districts_df,
+    on = ['district', 'cycle'],
+    how = 'left'
+    )
+
+new_districts_df_party.to_csv(os.path.join(data_folder, "new_districts_filtered_universe_party.csv"), index = False)
+
+new_districts_df_party = new_districts_df_party[['district', 'cycle', 'party']]
+
+
+#%%
+
+def compare_districts(df1, df2, df1_name="df1", df2_name="df2", district_col='district'):
+    districts_df1 = set(df1[district_col].dropna())
+    districts_df2 = set(df2[district_col].dropna())
+    
+    only_in_df1 = districts_df1 - districts_df2
+    only_in_df2 = districts_df2 - districts_df1
+    in_both = districts_df1 & districts_df2
+    
+    print("=" * 60)
+    print(f"District Comparison: {df1_name} vs {df2_name}")
+    print("=" * 60)
+    print(f"\nTotal districts in {df1_name}: {len(districts_df1)}")
+    print(f"Total districts in {df2_name}: {len(districts_df2)}")
+    print(f"Districts in both: {len(in_both)}")
+    
+    print(f"\n{'-' * 60}")
+    print(f"Districts only in {df1_name} (not in {df2_name}): {len(only_in_df1)}")
+    if only_in_df1:
+        print(sorted(only_in_df1))
+    
+    print(f"\n{'-' * 60}")
+    print(f"Districts only in {df2_name} (not in {df1_name}): {len(only_in_df2)}")
+    if only_in_df2:
+        print(sorted(only_in_df2))
+        
+    print('\n')
+    
+    return {
+        'only_in_df1': sorted(only_in_df1),
+        'only_in_df2': sorted(only_in_df2),
+        'in_both': sorted(in_both),
+        'df1_count': len(districts_df1),
+        'df2_count': len(districts_df2),
+        'both_count': len(in_both)
+    }
+
+# Usage example:
+for year in range(1980, 2026, 2):
+    selected_year = year
+    new_districts_df_filter_year = new_districts_df_real1_and_terr0[new_districts_df_real1_and_terr0['cycle'] == selected_year]
+    gen_elect_df_filter_year = gen_elect_df[gen_elect_df['cycle'] == selected_year]
+    
+    result = compare_districts(
+        new_districts_df_filter_year, 
+        gen_elect_df_filter_year, 
+        df1_name=f"new_districts_df_filter_{selected_year}", 
+        df2_name=f"gen_elect_df_{selected_year}"
+    )
+    
+    # Access the results
+    extra_districts_1980 = result['only_in_df1']
+    extra_districts_1980_reverse = result['only_in_df2']
+
+
 
 #%%
 
@@ -241,7 +575,7 @@ print("Processing OUTPUT_2...")
 
 #     6 total_amount_primary_without_LTS1: Same as above, but before special elections date.
 
-#     7 total_amount_gen: Sum of contributions in the district/cycle. Only considering primaries
+#     7 total_amount_gen: Sum of contributions in the district/cycle. Only considering general
 
 #     8 total_amount_gen_without_LTS1: Same as above, but before special elections date.
 
@@ -274,12 +608,24 @@ print("Processing OUTPUT_2...")
 #     22 total_amount_rep_special_without_LTS1: Same, but for Republicans
 
 
-def create_aggregated_outputs(input_df, output_prefix, filter_type=None, suffix=''):
+def create_aggregated_outputs(input_df, output_prefix, filter_type=None, amount_filter=None, suffix=''):
     # Apply filter if specified
     if filter_type:
         filtered_df = input_df[input_df['contributor.type'] == filter_type]
+        print("Raw dataset:", input_df.shape)
+        print("Used", filter_type, "for filtering")
+        print("New dataset:", filtered_df.shape)
     else:
+        print("Raw dataset:", input_df.shape)
         filtered_df = input_df.copy()
+        print("No filtering used")
+        
+    if amount_filter:
+        print("Filtering for rows with amounts less than:", amount_filter)
+        filtered_df = filtered_df[filtered_df['amount'] < 200]
+        print("New dataset:", filtered_df.shape)
+    else:
+        filtered_df = filtered_df.copy()
     
     print(f"Processing {output_prefix}...")
     
@@ -568,31 +914,80 @@ OUTPUT_2 = create_aggregated_outputs(OUTPUT_1, 'OUTPUT_2')
 
 # Merging with districts that have a creation year or discontinuation year or both after 1980
 print("Merging OUTPUTS with new_districts_df")
+
+
+for year in range(1980, 2026, 2):
+    selected_year = year
+    new_districts_df_filter_year = new_districts_df_real1[new_districts_df_real1['cycle'] == selected_year]
+    OUTPUT_2_filter_year = OUTPUT_2[OUTPUT_2['cycle'] == selected_year]
+    
+    result = compare_districts(
+        new_districts_df_filter_year, 
+        OUTPUT_2_filter_year, 
+        df1_name=f"new_districts_df_filter_{selected_year}", 
+        df2_name=f"OUTPUT_2_filter_{selected_year}"
+    )
+    
+    # Access the results
+    extra_districts_1980 = result['only_in_df1']
+    extra_districts_1980_reverse = result['only_in_df2']
+
+
+# new_districts_df['const_1'] = 1
+# OUTPUT_2['const_2'] = 1
+
+# OUTPUT_2_test = pd.merge(
+#     new_districts_df,
+#     OUTPUT_2,
+#     on=['district', 'cycle'],
+#     how='left'
+#     )
+
+# print(OUTPUT_2_test['const_1'].value_counts(dropna = False))
+# print(OUTPUT_2_test['const_2'].value_counts(dropna = False))
+
+
+# print("Unique district count by cycle (all data)")
+# print(OUTPUT_2_test.groupby('cycle')['district'].count())
+# print("-" * 20)
+# print("Unique district count by cycle (real_data == 1)")
+# print(OUTPUT_2_test[OUTPUT_2_test['real_data'] == 1].groupby('cycle')['district'].count())
+# print("-" * 20)
+# print("Unique district count by cycle (real_data == 1 & territorial == 0)")
+# print(OUTPUT_2_test[(OUTPUT_2_test['real_data'] == 1) & 
+#                     (OUTPUT_2_test['territorial'] == 0)].groupby('cycle')['district'].count())
+# print("=" * 20)
+
+
+## WE MERGE WITH UNIVERSE OF DISTRICTS
 OUTPUT_2 = pd.merge(
-    OUTPUT_2,
     new_districts_df,
+    OUTPUT_2,
     on=['district', 'cycle'],
     how='left'
     )
-# Missing values of real_data are replaced with 1, because they are real data (district has existed prior to 1980 and has existed until 2024)
-OUTPUT_2.loc[OUTPUT_2['real_data'].isna(), 'real_data'] = 1
-# Re-ordering data
-OUTPUT_2 = OUTPUT_2.sort_values(by=['district', 'cycle'], ascending=[True, True])
-columns_list = ['district', 'cycle', 'real_data']
-cols = columns_list + [
-    col for col in OUTPUT_2.columns if col not in columns_list]
-OUTPUT_2 = OUTPUT_2[cols]
 
-print("Merging OUTPUTS with OUTPUT_0")
-OUTPUT_2 = pd.merge(
-    OUTPUT_0,
-    OUTPUT_2,
-    on=['cycle', 'district'],
-    how='outer'
-    )
 
-# Missing values of real_data are replaced with 0, these don't exist but are fake rows to balance our dataset
-OUTPUT_2.loc[OUTPUT_2['real_data'].isna(), 'real_data'] = 0
+
+# # Missing values of real_data are replaced with 1, because they are real data (district has existed prior to 1980 and has existed until 2024)
+# OUTPUT_2.loc[OUTPUT_2['real_data'].isna(), 'real_data'] = 1
+# # Re-ordering data
+# OUTPUT_2 = OUTPUT_2.sort_values(by=['district', 'cycle'], ascending=[True, True])
+# columns_list = ['district', 'cycle', 'real_data']
+# cols = columns_list + [
+#     col for col in OUTPUT_2.columns if col not in columns_list]
+# OUTPUT_2 = OUTPUT_2[cols]
+
+# print("Merging OUTPUTS with OUTPUT_0")
+# OUTPUT_2 = pd.merge(
+#     OUTPUT_0,
+#     OUTPUT_2,
+#     on=['cycle', 'district'],
+#     how='outer'
+#     )
+
+# # Missing values of real_data are replaced with 0, these don't exist but are fake rows to balance our dataset
+# OUTPUT_2.loc[OUTPUT_2['real_data'].isna(), 'real_data'] = 0
 
 # Checking...
 print("Total length of dataset OUTPUT_2:", len(OUTPUT_2))
@@ -603,12 +998,14 @@ print("  - real_data == 0 and total_amount == Nan:", len(OUTPUT_2[(OUTPUT_2['rea
 
 test = OUTPUT_2[(OUTPUT_2['real_data'] == 0) & (~OUTPUT_2['total_amount'].isna())]
 
-test.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_2_problem.csv"), index=False)
+# test.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_2_problem.csv"), index=False)
 
 # Missing values of other columns are replaced with 0
 # OUTPUT_2_processed = OUTPUT_2.fillna(0)
 OUTPUT_2 = OUTPUT_2.fillna(0)
 OUTPUT_2.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_2.csv"), index=False)
+
+
 
 #%%
 
@@ -621,10 +1018,10 @@ OUTPUT_3 = create_aggregated_outputs(OUTPUT_1, 'OUTPUT_3', filter_type='C', suff
 
 # NOTE: We have already created real_data dummy, we get this information from OUTPUT_2 (the 'universe' of district-cycles) and avoid creating a new one for district-cycle individual contributions
 OUTPUT_3 = pd.merge(
-    OUTPUT_2[['district', 'cycle', 'real_data']], # we only need this information from OUTPUT_2
+    new_districts_df, # we only need this information from OUTPUT_2
     OUTPUT_3,
     on=['cycle', 'district'],
-    how='outer'
+    how='left'
     )
 
 # Checking...
@@ -642,42 +1039,75 @@ print("  - real_data == 0 and total_amount_corp == Nan:", len(OUTPUT_3[(OUTPUT_3
 # OUTPUT_3_processed = OUTPUT_3.fillna(0)
 OUTPUT_3 = OUTPUT_3.fillna(0)
 OUTPUT_3.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_3.csv"), index=False)
-OUTPUT_3 = OUTPUT_3.drop(columns = 'real_data') # no duplicate columns when merging with OUTPUT_2
+OUTPUT_3 = OUTPUT_3.drop(columns = ['real_data', 'territorial']) # no duplicate columns when merging with OUTPUT_2
 
 
 #%%
 
 ### OUTPUT_4: 
 print("Processing OUTPUT_4...")
+
     
 # all variables are similar to OUTPUT_2 but apply only to contributions coming from individuals
 
-OUTPUT_4 = create_aggregated_outputs(OUTPUT_1, 'OUTPUT_4', filter_type='I', suffix='_ind')
+OUTPUT_4_1 = create_aggregated_outputs(OUTPUT_1, 'OUTPUT_4_1', filter_type='I', suffix='_ind')
+
+OUTPUT_4_2 = create_aggregated_outputs(OUTPUT_1, 'OUTPUT_4_2', filter_type='I', amount_filter=200, suffix='_smallind')
 
 # NOTE: We have already created real_data dummy, we get this information from OUTPUT_2 (the 'universe' of district-cycles) and avoid creating a new one for district-cycle individual contributions
-OUTPUT_4 = pd.merge(
-    OUTPUT_2[['district', 'cycle', 'real_data']], # we only need this information from OUTPUT_2
-    OUTPUT_4,
+OUTPUT_4_1 = pd.merge(
+    new_districts_df, # we only need this information from OUTPUT_2
+    OUTPUT_4_1,
     on=['cycle', 'district'],
-    how='outer'
+    how='left'
+    )
+
+OUTPUT_4_2 = pd.merge(
+    new_districts_df, # we only need this information from OUTPUT_2
+    OUTPUT_4_2,
+    on=['cycle', 'district'],
+    how='left'
     )
 
 # Checking...
-print("Total length of dataset OUTPUT_4:", len(OUTPUT_4))
-print("  - real_data == 1 and total_amount_ind != Nan:", len(OUTPUT_4[(OUTPUT_4['real_data'] == 1) & (~OUTPUT_4['total_amount_ind'].isna())]))
-print("  - real_data == 1 and total_amount_ind == Nan:", len(OUTPUT_4[(OUTPUT_4['real_data'] == 1) & (OUTPUT_4['total_amount_ind'].isna())]), "(ISSUE if >0)")
-print("  - real_data == 0 and total_amount_ind != Nan:", len(OUTPUT_4[(OUTPUT_4['real_data'] == 0) & (~OUTPUT_4['total_amount_ind'].isna())]), "(ISSUE if >0)")
-print("  - real_data == 0 and total_amount_ind == Nan:", len(OUTPUT_4[(OUTPUT_4['real_data'] == 0) & (OUTPUT_4['total_amount_ind'].isna())]))
+print("Total length of dataset OUTPUT_4_1:", len(OUTPUT_4_1))
+print("  - real_data == 1 and total_amount_ind != Nan:", len(OUTPUT_4_1[(OUTPUT_4_1['real_data'] == 1) & (~OUTPUT_4_1['total_amount_ind'].isna())]))
+print("  - real_data == 1 and total_amount_ind == Nan:", len(OUTPUT_4_1[(OUTPUT_4_1['real_data'] == 1) & (OUTPUT_4_1['total_amount_ind'].isna())]), "(ISSUE if >0)")
+print("  - real_data == 0 and total_amount_ind != Nan:", len(OUTPUT_4_1[(OUTPUT_4_1['real_data'] == 0) & (~OUTPUT_4_1['total_amount_ind'].isna())]), "(ISSUE if >0)")
+print("  - real_data == 0 and total_amount_ind == Nan:", len(OUTPUT_4_1[(OUTPUT_4_1['real_data'] == 0) & (OUTPUT_4_1['total_amount_ind'].isna())]))
+
+print("Total length of dataset OUTPUT_4_2:", len(OUTPUT_4_2))
+print("  - real_data == 1 and total_amount_smallind != Nan:", len(OUTPUT_4_2[(OUTPUT_4_2['real_data'] == 1) & (~OUTPUT_4_2['total_amount_smallind'].isna())]))
+print("  - real_data == 1 and total_amount_smallind == Nan:", len(OUTPUT_4_2[(OUTPUT_4_2['real_data'] == 1) & (OUTPUT_4_2['total_amount_smallind'].isna())]), "(ISSUE if >0)")
+print("  - real_data == 0 and total_amount_smallind != Nan:", len(OUTPUT_4_2[(OUTPUT_4_2['real_data'] == 0) & (~OUTPUT_4_2['total_amount_smallind'].isna())]), "(ISSUE if >0)")
+print("  - real_data == 0 and total_amount_smallind == Nan:", len(OUTPUT_4_2[(OUTPUT_4_2['real_data'] == 0) & (OUTPUT_4_2['total_amount_smallind'].isna())]))
+
 
 # test = OUTPUT_4[(OUTPUT_4['real_data'] == 0) & (~OUTPUT_4['total_amount_ind'].isna())]
 
 # test.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_4_problem.csv"), index=False)
 
 # Missing values of other columns are replaced with 0
-# OUTPUT_4_processed = OUTPUT_4.fillna(0)
-OUTPUT_4 = OUTPUT_4.fillna(0)
+# OUTPUT_4_1_processed = OUTPUT_4_1.fillna(0)
+OUTPUT_4_1 = OUTPUT_4_1.fillna(0)
+OUTPUT_4_1.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_4_1.csv"), index=False)
+OUTPUT_4_1 = OUTPUT_4_1.drop(columns = ['real_data', 'territorial']) # no duplicate columns when merging with OUTPUT_2
+
+# OUTPUT_4_2_processed = OUTPUT_4_2.fillna(0)
+OUTPUT_4_2 = OUTPUT_4_2.fillna(0)
+OUTPUT_4_2.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_4_2.csv"), index=False)
+OUTPUT_4_2 = OUTPUT_4_2.drop(columns = ['real_data', 'territorial']) # no duplicate columns when merging with OUTPUT_2
+
+OUTPUT_4 = pd.merge(
+    OUTPUT_4_1,
+    OUTPUT_4_2,
+    on=['cycle', 'district'],
+    how='outer'
+    )
+
 OUTPUT_4.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_4.csv"), index=False)
-OUTPUT_4 = OUTPUT_4.drop(columns = 'real_data') # no duplicate columns when merging with OUTPUT_2
+# OUTPUT_4 = OUTPUT_4_2.drop(columns = 'real_data') # no duplicate columns when merging with OUTPUT_2
+
 
 #%%
 
@@ -724,12 +1154,20 @@ OUTPUT_5['district_color_40_60'] = pd.cut(
 
 print("Finished merging OUTPUT_5!")
 
+# OUTPUT_5 = pd.merge(
+#     OUTPUT_0,
+#     OUTPUT_5,
+#     on=['cycle', 'district'],
+#     how='left'
+#     )
+
 OUTPUT_5 = pd.merge(
-    OUTPUT_0,
+    new_districts_df,
     OUTPUT_5,
     on=['cycle', 'district'],
-    how='outer'
+    how='left'
     )
+
 
 OUTPUT_5.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_5.csv"), index = False)
 
@@ -741,48 +1179,6 @@ OUTPUT_5 = OUTPUT_5[['district', 'cycle', 'district_color_35_65', 'district_colo
 print("Processing OUTPUT_6...")
 
 # THESE ARE OLD VAR NAMES
-
-#     - dist_cycle_comp_35_65: We compute the average across candidates of the vote shares obtained in the general election. We consider only the two main candidates for this. Second, if this is between 35 and 65, we assign value 1, and 0 otherwise.
-
-#     - dist_cycle_comp_30_70: Same as dist_cycle_comp_35_65 but using 30 and 70 as thresholds
-
-#     - dist_cycle_comp_40_60: Same as dist_cycle_comp_35_65 but using 40 and 60 as thresholds
-
-#     - avg_gen_vote_pct_dem: Average gen.vote.pct values for Democrats for each district in all cycles prior to the current one, excluding the present cycle
-
-#     - avg_gen_vote_pct_rep: Average gen.vote.pct values for Republicans for each district in all cycles prior to the current one, excluding the present cycle
-
-#     - dist_cycle_comp_35_65_lag: dist_cycle_comp_35_65 lagged by one election cycle
-
-#     - dist_cycle_comp_30_70_lag: dist_cycle_comp_30_70 lagged by one election cycle
-
-#     - dist_cycle_comp_40_60_lag: dist_cycle_comp_40_60 lagged by one election cycle
-
-#     - dem_prim_cycle_comp_35_65: Same as dist_cycle_comp_35_65 but considering only (two main) candidates in Dem primary
-
-#     - dem_prim_cycle_comp_30_70: Same as dist_cycle_comp_30_70 but considering only (two main) candidates in Dem primary
-
-#     - dem_prim_cycle_comp_40_60: Same as dist_cycle_comp_40_60 but considering only (two main) candidates in Dem primary
-
-#     - dem_prim_cycle_comp_35_65_lag: dem_prim_cycle_comp_35_65 lagged by one election cycle
-
-#     - dem_prim_cycle_comp_30_70_lag: dem_prim_cycle_comp_30_70 lagged by one election cycle
-
-#     - dem_prim_cycle_comp_40_60_lag: dem_prim_cycle_comp_40_60 lagged by one election cycle
-
-#     - rep_prim_cycle_comp_35_65: Same as dist_cycle_comp_35_65 but considering only (two main) candidates in Rep primary
-
-#     - rep_prim_cycle_comp_30_70: Same as dist_cycle_comp_30_70 but considering only (two main) candidates in Rep primary
-
-#     - rep_prim_cycle_comp_40_60: Same as dist_cycle_comp_40_60 but considering only (two main) candidates in Rep primary
-
-#     - rep_prim_cycle_comp_35_65_lag: rep_prim_cycle_comp_35_65 lagged by one election cycle
-
-#     - rep_prim_cycle_comp_30_70_lag: rep_prim_cycle_comp_30_70 lagged by one election cycle
-
-#     - rep_prim_cycle_comp_40_60_lag: rep_prim_cycle_comp_40_60 lagged by one election cycle
-
-#     - Election_day: Date of the general election held at that election cycle.
 
 
 
@@ -954,6 +1350,11 @@ def calculate_metrics(data, measure_var):
        
         result['num_candidates'] = data['candidate'].nunique()
         
+        # NEW CONDITION: If G_dem or G_rep equals 1, set G_dispersion to 1 (this means they won elections uncontested)
+        if 'G_dem' in result and 'G_rep' in result:
+            if result['G_dem'] == 1 or result['G_rep'] == 1:
+                result['G_dispersion'] = 1
+
     else:
         print(f"{measure_var} not found")
         
@@ -1058,22 +1459,7 @@ def calculate_avg_gen_vote_pct(data, value_column='G_average'):
         rep_col = f'avg_{value_column}_rep'
         return pd.DataFrame(columns=['district', 'cycle', dem_col, rep_col])    
     
-# # 3.
-# def create_cat_vars(data, dictionary, var, labels):
-#     result_data = data.copy()
-#     for key, value in dictionary.items():
-#         print(key, value)
-#         result_data[key] = pd.cut(
-#             result_data[var], 
-#             bins=value, 
-#             labels=labels, 
-#             ordered=False,
-#             include_lowest=True
-#         )
-#     return result_data
-    
 
-    
 # Creating datasets
 print("Filtering OUTPUT_6_1_1...")
 # OUTPUT_6_1_1 = OUTPUT_1.groupby(['district', 'cycle']).apply(
@@ -1086,12 +1472,14 @@ OUTPUT_6_1_1 = gen_elect_df.groupby(['district', 'cycle', 'totalvotes']).apply(
 
 
 OUTPUT_6_1_1 = pd.merge(
-    OUTPUT_0,
+    new_districts_df,
     OUTPUT_6_1_1,
     on=['cycle', 'district'],
-    how='outer'
+    how='left'
     )
 
+# display_duplicates(gen_elect_df, ['district', 'cycle', 'candidate'])
+# display_duplicates(OUTPUT_6_1_1, ['district', 'cycle'])
 
 # We groupby party as well, to get G_max for Dems and Reps (their vote share)
 print("Filtering OUTPUT_6_1_2...")
@@ -1104,10 +1492,10 @@ OUTPUT_6_1_2 = gen_elect_df.groupby(['district', 'cycle', 'party']).apply(
 ).reset_index()
 
 OUTPUT_6_1_2 = pd.merge(
-    OUTPUT_0_2,
+    new_districts_df_party[['district', 'cycle', 'party']],
     OUTPUT_6_1_2,
     on=['cycle', 'district', 'party'],
-    how='outer'
+    how='left'
     )
 # OUTPUT_6_1_2 = OUTPUT_6_1_2[OUTPUT_6_1_2['party'].isin(unique_parties)]
 
@@ -1139,53 +1527,20 @@ OUTPUT_6_2_rep_dict = {col: f"{col}_rep" for col in OUTPUT_6_2_rep.columns if co
 OUTPUT_6_2_rep = OUTPUT_6_2_rep.rename(columns=OUTPUT_6_2_rep_dict)
 
 
-# Applying a function to create variables using a for loop for each dicitonary
-# print("Creating categorical variables for district in general...")
-# label_values = [0, 1, 0]
 
-# # NOTE: gen.vote.pct and prim.vote.pct use different scales for measuring percentages, labels adjusted accordingly
-# # OUTPUT_6_1_dict_G = {
-# #     'dist_cycle_comp_35_65': [0, 35, 65, 100],
-# #     'dist_cycle_comp_30_70': [0, 30, 70, 100],
-# #     'dist_cycle_comp_40_60': [0, 40, 60, 100]
-# #     }
-
-# OUTPUT_6_1_dict_G = {
-#     'dist_cycle_comp_35_65': [0, 0.35, 0.65, 1],
-#     'dist_cycle_comp_30_70': [0, 0.30, 0.70, 1],
-#     'dist_cycle_comp_40_60': [0, 0.40, 0.60, 1]
-#     }
-
-
-# OUTPUT_6_2_dict_dem_P = {
-#     'dem_prim_cycle_comp_35_65': [0, 0.35, 0.65, 1],
-#     'dem_prim_cycle_comp_30_70': [0, 0.30, 0.70, 1],
-#     'dem_prim_cycle_comp_40_60': [0, 0.40, 0.60, 1]
-#     }
-
-# OUTPUT_6_2_dict_rep_P = {
-#     'rep_prim_cycle_comp_35_65': [0, 0.35, 0.65, 1],
-#     'rep_prim_cycle_comp_30_70': [0, 0.30, 0.70, 1],
-#     'rep_prim_cycle_comp_40_60': [0, 0.40, 0.60, 1]
-#     }
-
-
-# OUTPUT_6_1_1 = create_cat_vars(OUTPUT_6_1_1, OUTPUT_6_1_dict_G, 'G_dispersion', label_values)
-# OUTPUT_6_2_dem = create_cat_vars(OUTPUT_6_2_dem, OUTPUT_6_2_dict_dem_P, 'P_dispersion', label_values)
-# OUTPUT_6_2_rep = create_cat_vars(OUTPUT_6_2_rep, OUTPUT_6_2_dict_rep_P, 'P_dispersion', label_values)
 
 # Balancing datasets
 OUTPUT_6_2_dem = pd.merge(
-    OUTPUT_0,
+    OUTPUT_2[['district', 'cycle']],
     OUTPUT_6_2_dem,
     on=['cycle', 'district'],
-    how='outer'
+    how='left'
     )
 OUTPUT_6_2_rep = pd.merge(
-    OUTPUT_0,
+    OUTPUT_2[['district', 'cycle']],
     OUTPUT_6_2_rep,
     on=['cycle', 'district'],
-    how='outer'
+    how='left'
     )
 
 # Adding lagged variables
@@ -1286,15 +1641,9 @@ print("Merge complete!")
 
 
 
-# # Adding lags variables
-# OUTPUT_6 = OUTPUT_6.sort_values(by=['district', 'cycle'])
-# for var in ['dist_cycle_comp_35_65', 'dist_cycle_comp_30_70', 'dist_cycle_comp_40_60',
-#             'dem_prim_cycle_comp_35_65', 'dem_prim_cycle_comp_30_70', 'dem_prim_cycle_comp_40_60', 
-#             'rep_prim_cycle_comp_35_65', 'rep_prim_cycle_comp_30_70', 'rep_prim_cycle_comp_40_60']:
-#     OUTPUT_6[f'{var}_lag'] = OUTPUT_6.groupby('district')[var].shift(1)
-
 OUTPUT_6.to_csv(os.path.join(data_folder, 'OUTPUTS', 'OUTPUT_6.csv'), index = False)
 
+OUTPUT_6 = OUTPUT_6.drop(columns = ['real_data', 'territorial'])
 
 
 #%%
@@ -1305,6 +1654,8 @@ print("Processing OUTPUT_7...")
 #   - "treat_1": "For single districts, we assign 1 for district/cycles after death of an incumbent. We assign 0 otherwise (before death). For multiple death districts, we copy treat_1 logic and take into account only first death",
 
 #   - "treat_2": "For single districts, we copy treat_1 logic. For multiple death districts, we assign 1 for district/cycles for the first cycle after death of an incumbent. We assign 0 afterwards until second death, where we assign 1 again in the first cycle after second death, and 0 again. We repeat for third death, if applicable.",
+
+#   - "death_date": "Date of incumbent's death, if applicable"
 
 #   - "death_unexpected_1": "For treat_1, we take this dummy from Deaths.xlsx dataset. 1, if if cause of death was an unexpected event.",
 
@@ -1320,6 +1671,8 @@ print("Processing OUTPUT_7...")
 
 #   - "spec_member": "District representative in special elections (includes deaths and resignations)",
 
+#   - "special_elections_date": "Date of special elections, if applicable"
+
 #   - "special_elections_cause": "Cause of special elections (either death or resignation of representative)",
 
 #   - "special_elections": "Dummy to indicate district-cycle with special election",
@@ -1329,152 +1682,99 @@ OUTPUT_7 = OUTPUT_1[['district', 'cycle']].drop_duplicates()
 OUTPUT_7 = OUTPUT_7[~OUTPUT_7['cycle'].isna()]
 print("Balancing dataset...")
 OUTPUT_7 = pd.merge(
-    OUTPUT_0,
+    new_districts_df,
     OUTPUT_7,
-    how = 'outer',
+    how = 'left',
+    on = ['district', 'cycle']
+    )
+
+# Adding information from special elections data
+OUTPUT_7 = pd.merge(
+    OUTPUT_7,
+    special_elections[['district', 'death_cycle', 'spec_cycle', 'death_date', 'spec_election_date', 
+                       'dead_member_margin', 'spec_winner_margin', 'runoff']].rename(
+        columns = {
+            'death_cycle': 'cycle',
+            'spec_election_date': 'special_elections_date'
+            }),
+    how = 'left',
     on = ['district', 'cycle']
     )
 
 
-# Creating treat_1
 print("Creating treat_1...")
 OUTPUT_7['treat_1'] = 0
 for district in single_death_districts + multiple_death_districts:
-    # Get death year for this district
-    district_death_dates = OUTPUT_1[
-        (OUTPUT_1['district'] == district) & 
-        (OUTPUT_1['death_date'].notna())
-    ]['death_date']
+    # Assign treat_1 = 1 where death_date is not NA and for all cycles after in that district
+    district_mask = OUTPUT_7['district'] == district
+    district_data = OUTPUT_7[district_mask].copy()
     
-    if not district_death_dates.empty:
-        death_date = district_death_dates.iloc[0]
-        death_year = pd.to_datetime(death_date).year
+    # Find the first row where death_date is not NA
+    first_death_idx = district_data[district_data['death_date'].notna()].index
+    
+    if not first_death_idx.empty:
+        first_death_cycle = OUTPUT_7.loc[first_death_idx[0], 'cycle']
         
-        # Assign treatment to cycles after death year
+        # Assign treat_1 = 1 for cycles >= first death cycle
         OUTPUT_7.loc[
             (OUTPUT_7['district'] == district) & 
-            (OUTPUT_7['cycle'] > death_year), 
+            (OUTPUT_7['cycle'] >= first_death_cycle), 
             'treat_1'] = 1
     else:
-        print(f"Warning: No death date found for district {district}")
+        print(f"Warning: No death date found for district {district} (likely because of merge btw special_elections and sample used")
+        
 print("Finished processing treat_1")
 
-# Creating treat_2
+        
 print("Creating treat_2...")
 OUTPUT_7['treat_2'] = 0
+
 for district in single_death_districts + multiple_death_districts:
-    # Get all deaths for this district with their years
-    district_deaths = OUTPUT_1[
-        (OUTPUT_1['district'] == district) & 
-        (OUTPUT_1['death_date'].notna())
-    ][['death_date', 'cycle']].drop_duplicates()
-    
-    district_deaths['death_year'] = pd.to_datetime(district_deaths['death_date']).dt.year
-    
-    # For each contribution in the district
     district_mask = OUTPUT_7['district'] == district
     
-    if not district_death_dates.empty:
+    if district in single_death_districts:
+        # For single death districts, copy treat_1 logic
+        OUTPUT_7.loc[district_mask, 'treat_2'] = OUTPUT_7.loc[district_mask, 'treat_1']
         
-        if district in single_death_districts:
-            
-            # Copying treat_1 to treat_2
-            OUTPUT_7.loc[district_mask, 'treat_2'] = OUTPUT_7.loc[district_mask, 'treat_1']
-        
-        # elif district in multiple_death_districts:
-        #     print(f"{district} is multiple death")
-        #     # Get all special election years for this district
-        #     special_elections_death_dates = special_elections[
-        #         (special_elections['district'] == district)
-        #     ]['spec_election_date'].unique()
-            
-        #     special_elections_years = pd.to_datetime(special_elections_death_dates).year
-            
-        #     print(f"Distict: {district}, Special elections years: {special_elections_years}")
-        #     print()
-            
-        #     # For each cycle in this district (sorted)
-        #     district_cycles = sorted(OUTPUT_7[OUTPUT_7['district'] == district]['cycle'])       
-            
-        #     for i, cycle in enumerate(district_cycles):
-        #         state = 0 # default state is 0
+    elif district in multiple_death_districts:
+        # For multiple death districts, treat_2 = 1 only when death_date is not NA
+        OUTPUT_7.loc[
+            (OUTPUT_7['district'] == district) & 
+            (OUTPUT_7['death_date'].notna()), 
+            'treat_2'
+        ] = 1
+    else:
+        print(f"District {district} not found in single_death_districts nor in multiple_death_districts")
+
+print("Finished processing treat_2")
+
+
+
+# Creating treat_3
+print("Creating treat_3...")
+OUTPUT_7['treat_3'] = 0
+
+for district in single_death_districts + multiple_death_districts:
+    district_mask = OUTPUT_7['district'] == district
     
-        #         # Check each death
-        #         for _, death_row in district_deaths.iterrows():
-        #             death_year = death_row['death_year']
-                    
-        #             # If current cycle is the first cycle after death
-        #             if cycle > death_year:
-        #                 # Check if there was a previous cycle after death but before current cycle
-        #                 if i > 0 and district_cycles[i-1] > death_year:
-        #                     # Not the first cycle after death, skip
-        #                     continue
-                        
-        #                 # Check if there's a special election between death and this cycle
-        #                 intervening_special = any((special_year > death_year) & (special_year <= cycle) 
-        #                                          for special_year in special_elections_years)
-                        
-        #                 # If no intervening special election and this is the first cycle after death
-        #                 if not intervening_special:
-        #                     state = 1
-        #                     break
-                
-        #         OUTPUT_7.loc[
-        #             (OUTPUT_7['district'] == district) & 
-        #             (OUTPUT_7['cycle'] == cycle), 
-        #             'treat_2'] = state
-                
-        #         print(f"Finished processing treat_2 for {district}")
-                
-            
-        elif district in multiple_death_districts:
-            
-            # Get all special election years for this district
-            special_elections_death_dates = special_elections[
-                (special_elections['district'] == district)
-            ]['spec_election_date'].unique()
-            
-            special_elections_years = pd.to_datetime(special_elections_death_dates).year
-            
-            # For each cycle in this district (sorted)
-            cycle_mask = OUTPUT_7['district'] == district
-            district_cycles = sorted(OUTPUT_7[cycle_mask]['cycle'])       
-            
-            for cycle in district_cycles:
-                state = 0  # default state is 0
-                cycle_idx = district_cycles.index(cycle)
-    
-                # Check each death
-                for _, death_row in district_deaths.iterrows():
-                    death_year = death_row['death_year']
-                    
-                    # If current cycle is after death
-                    if cycle > death_year:
-                        # Check if there was a previous cycle after death but before current cycle
-                        if cycle_idx > 0 and district_cycles[cycle_idx-1] > death_year:
-                            # Not the first cycle after death, skip
-                            continue
-                        
-                        # Check if there's a special election between death and this cycle
-                        intervening_special = any((special_year > death_year) & (special_year <= cycle) 
-                                                 for special_year in special_elections_years)
-                        
-                        # If no intervening special election and this is the first cycle after death
-                        if not intervening_special:
-                            state = 1
-                            break
-                
-                # Use the combined mask for district and cycle
-                combined_mask = district_mask & (OUTPUT_7['cycle'] == cycle)
-                OUTPUT_7.loc[combined_mask, 'treat_2'] = state
-                
-        else:
-            print("District not found in single_death_districts nor in multiple_death_districts")
+    if district in single_death_districts:
+        # For single death districts, treat_3 = 1 only when death_date is not NA
+        OUTPUT_7.loc[
+            (OUTPUT_7['district'] == district) & 
+            (OUTPUT_7['death_date'].notna()), 
+            'treat_3'
+        ] = 1
         
-    else:         
-        print(f"Warning: No death date found for district {district}")        
-print("Finished processing treat_2")   
-        
+    elif district in multiple_death_districts:
+        # For multiple death districts, replicate treat_2
+        OUTPUT_7.loc[district_mask, 'treat_3'] = OUTPUT_7.loc[district_mask, 'treat_2']
+    else:
+        print(f"District {district} not found in single_death_districts nor in multiple_death_districts")
+
+print("Finished processing treat_3")
+
+
+# RENAMING CYCLE BACK TO 
 
 
 # Creating death_unexpected, death_age, and death_party_member
@@ -1485,87 +1785,9 @@ OUTPUT_7['death_party_1'] = np.nan
 OUTPUT_7['death_unexpected_2'] = np.nan
 OUTPUT_7['death_age_2'] = np.nan
 OUTPUT_7['death_party_2'] = np.nan
-
-# for district in single_death_districts + multiple_death_districts:
-#     # Get all deaths for this district with their metadata
-#     district_deaths = OUTPUT_1[
-#         (OUTPUT_1['district'] == district) & 
-#         (OUTPUT_1['death_date'].notna())
-#     ][['death_date', 'cycle', 'death_unexpected', 'death_age', 'spec_party', 'treat_1', 'treat_2']].drop_duplicates()
-    
-#     if district_deaths.empty:
-#         print(f"Warning: No death data found for district {district}")
-#         continue
-    
-#     # Convert death_date to datetime and sort by date
-#     district_deaths['death_date'] = pd.to_datetime(district_deaths['death_date'])
-#     district_deaths = district_deaths.sort_values('death_date')
-#     district_deaths['death_year'] = district_deaths['death_date'].dt.year
-    
-#     # Get all special election dates for this district if it's a multiple death district
-#     if district in multiple_death_districts:
-#         special_elections_dates = pd.to_datetime(special_elections[
-#             (special_elections['district'] == district)
-#         ]['spec_election_date'].unique())
-#         special_elections_years = pd.Series([date.year for date in special_elections_dates if not pd.isna(date)])
-    
-#     # Get all cycles for this district (sorted)
-#     district_cycles = sorted(OUTPUT_7[OUTPUT_7['district'] == district]['cycle'])
-    
-#     # For single death districts, process is simpler
-#     if district in single_death_districts:
-#         death_row = district_deaths.iloc[0]  # Get the only death row
-        
-#         # For ALL cycles in this district, assign the first death's attributes
-#         for cycle in district_cycles:
-#             OUTPUT_7.loc[
-#                 (OUTPUT_7['district'] == district) & 
-#                 (OUTPUT_7['cycle'] == cycle), 
-#                 ['death_unexpected', 'death_age', 'spec_party']
-#             ] = [
-#                 death_row['death_unexpected'],
-#                 death_row['death_age'],
-#                 death_row['spec_party']
-#             ]
-    
-#     # For multiple death districts
-#     else:
-#         # Get the first death's data
-#         first_death = district_deaths.iloc[0]
-#         first_death_year = first_death['death_year']
-        
-#         # For each cycle
-#         for cycle in district_cycles:
-#             # Default to using first death's data
-#             relevant_death = first_death
-            
-#             # If we're after the first death, check if we should use a different death
-#             if cycle > first_death_year:
-#                 for idx, death_row in district_deaths.iterrows():
-#                     death_year = death_row['death_year']
-                    
-#                     # If death is before this cycle
-#                     if death_year < cycle:
-#                         # Check if there's a special election between this death and the cycle
-#                         intervening_special = any(
-#                             (special_year > death_year) & (special_year <= cycle) 
-#                             for special_year in special_elections_years
-#                         )
-                        
-#                         # If no intervening special election, this death is relevant
-#                         if not intervening_special:
-#                             relevant_death = death_row
-            
-#             # Assign the relevant death's attributes
-#             OUTPUT_7.loc[
-#                 (OUTPUT_7['district'] == district) & 
-#                 (OUTPUT_7['cycle'] == cycle), 
-#                 ['death_unexpected', 'death_age', 'spec_party']
-#             ] = [
-#                 relevant_death['death_unexpected'],
-#                 relevant_death['death_age'],
-#                 relevant_death['spec_party']
-#             ]
+OUTPUT_7['death_unexpected_3'] = np.nan
+OUTPUT_7['death_age_3'] = np.nan
+OUTPUT_7['death_party_3'] = np.nan
 
 
 for district in single_death_districts + multiple_death_districts:
@@ -1585,17 +1807,18 @@ for district in single_death_districts + multiple_death_districts:
     district_deaths['death_year'] = district_deaths['death_date'].dt.year
     
     # Get all special election dates for this district
-    special_elections_dates = pd.to_datetime(special_elections[
+    special_elections_dates_temp = pd.to_datetime(special_elections[
         (special_elections['district'] == district)
     ]['spec_election_date'].unique())
-    special_elections_years = pd.Series([date.year for date in special_elections_dates if not pd.isna(date)])
+    special_elections_years = pd.Series([date.year for date in special_elections_dates_temp if not pd.isna(date)])
     
     # Get all cycles for this district (sorted)
     district_cycles = sorted(OUTPUT_7[OUTPUT_7['district'] == district]['cycle'])
     
     # Initialize columns for this district if not already present
     for col in ['death_unexpected_1', 'death_age_1', 'death_party_1', 
-                'death_unexpected_2', 'death_age_2', 'death_party_2']:
+                'death_unexpected_2', 'death_age_2', 'death_party_2',
+                'death_unexpected_3', 'death_age_3', 'death_party_3']:
         if col not in OUTPUT_7.columns:
             OUTPUT_7[col] = np.nan
     
@@ -1613,8 +1836,6 @@ for district in single_death_districts + multiple_death_districts:
         first_death['spec_party']
     ]
     
-        
-    # IF DEATH ATTRIBUTES NEED TO BE ASSIGNED VALUES OF FIRST DEATH FOR ZERO VALUES OF TREAT_2
     # For treat_2 logic
     for cycle in district_cycles:
         # Find the closest death before (or at) this cycle
@@ -1651,56 +1872,43 @@ for district in single_death_districts + multiple_death_districts:
             relevant_death['death_age'],
             relevant_death['spec_party']
         ]
-
-        
-        
-    # IF DEATH ATTRIBUTES NEED TO BE MISSING FOR ZERO VALUES OF TREAT_2
-    # # For treat_2 logic
-    # for cycle in district_cycles:
-    #     # Find the closest death before (or at) this cycle
-    #     deaths_before_cycle = district_deaths[district_deaths['death_year'] <= cycle]
-        
-    #     if deaths_before_cycle.empty:
-    #         # No deaths before this cycle, set null values
-    #         relevant_death = None
-    #     else:
-    #         # Get the most recent death before this cycle
-    #         relevant_death = deaths_before_cycle.iloc[-1]
+    
+    # For treat_3 logic
+    if district in single_death_districts:
+        # For single death districts, assign attributes only when death_date is not NA
+        OUTPUT_7.loc[
+            (OUTPUT_7['district'] == district) & 
+            (OUTPUT_7['death_date'].notna()),
+            ['death_unexpected_3', 'death_age_3', 'death_party_3']
+        ] = [
+            first_death['death_unexpected'],
+            first_death['death_age'],
+            first_death['spec_party']
+        ]
+    elif district in multiple_death_districts:
+        # For multiple death districts, replicate treat_2 logic
+        # Assign attributes only when death_date is not NA
+        for cycle in district_cycles:
+            # Find deaths that occurred in this cycle
+            cycle_mask = (OUTPUT_7['district'] == district) & (OUTPUT_7['cycle'] == cycle)
+            deaths_in_this_cycle = district_deaths[district_deaths['cycle'] == cycle]
             
-    #         # For multiple death districts with treat_2 logic
-    #         if district in multiple_death_districts:
-    #             death_year = relevant_death['death_year']
+            # Check if there's a death_date in this cycle
+            if OUTPUT_7.loc[cycle_mask, 'death_date'].notna().any() and not deaths_in_this_cycle.empty:
+                relevant_death = deaths_in_this_cycle.iloc[0]
                 
-    #             # Check if there's a special election between this death and the cycle
-    #             intervening_special = any(
-    #                 (special_year > death_year) & (special_year <= cycle) 
-    #                 for special_year in special_elections_years
-    #             )
+                OUTPUT_7.loc[
+                    cycle_mask,
+                    ['death_unexpected_3', 'death_age_3', 'death_party_3']
+                ] = [
+                    relevant_death['death_unexpected'],
+                    relevant_death['death_age'],
+                    relevant_death['spec_party']
+                ]
                 
-    #             # If there's an intervening special election, this death is no longer relevant
-    #             if intervening_special:
-    #                 relevant_death = None
-        
-    #     # Assign the relevant death's attributes for treat_2 variables
-    #     if relevant_death is not None:
-    #         OUTPUT_7.loc[
-    #             (OUTPUT_7['district'] == district) & 
-    #             (OUTPUT_7['cycle'] == cycle), 
-    #             ['death_unexpected_2', 'death_age_2', 'death_party_2']
-    #         ] = [
-    #             relevant_death['death_unexpected'],
-    #             relevant_death['death_age'],
-    #             relevant_death['spec_party']
-    #         ]
-    #     else:
-    #         # If no relevant death for treat_2, set to null
-    #         OUTPUT_7.loc[
-    #             (OUTPUT_7['district'] == district) & 
-    #             (OUTPUT_7['cycle'] == cycle), 
-    #             ['death_unexpected_2', 'death_age_2', 'death_party_2']
-    #         ] = [np.nan, np.nan, np.nan]
     
 print("Finished processing death attributes")
+
 
 # Creating special_elections and special_elections_cause data
 print("Creating special_elections and special_elections_cause variables")
@@ -1719,8 +1927,13 @@ OUTPUT_7 = pd.merge(
 
 OUTPUT_7['special_elections'] = np.where(OUTPUT_7['spec_member'].notna(), 1, 0)
 
+OUTPUT_7['death_date'] = pd.to_datetime(OUTPUT_7['death_date'])
+OUTPUT_7['special_elections_date'] = pd.to_datetime(OUTPUT_7['special_elections_date'])
+
+
 OUTPUT_7.to_csv(os.path.join(data_folder, 'OUTPUTS', 'OUTPUT_7.csv'), index = False)
 
+OUTPUT_7 = OUTPUT_7.drop(columns = ['real_data', 'territorial'])
 
 
 #%%
@@ -1753,6 +1966,7 @@ print("Processing OUTPUT_8...")
 #     12 hedging_money_rep_primary_ind: Same as hedging_money_general_ind but computed using contributions to two main candidates in Rep primary only
 
 
+
 # Creating avg_counting_hedging_corp and avg_counting_hedging_ind
 print("Creating avg_counting_hedging_corp and avg_counting_hedging_ind...")
 OUTPUT_8_1_corp = OUTPUT_1[
@@ -1777,6 +1991,19 @@ OUTPUT_8_1_ind = OUTPUT_1[
 
 OUTPUT_8_1_ind = OUTPUT_8_1_ind.groupby(['district', 'cycle']).agg(
     avg_counting_hedging_ind = ('counting_hedging_ind', 'mean'),
+).reset_index()
+
+OUTPUT_8_1_smallind = OUTPUT_1[
+    (OUTPUT_1['election.type'] == 'G') & 
+    (OUTPUT_1['contributor.type'] == 'I') & 
+    (OUTPUT_1['later_than_special'] != 1) &
+    (OUTPUT_1['amount'] < 200)
+    ].groupby(['district', 'cycle', 'party']).agg(
+    counting_hedging_smallind = ('bonica.rid', 'nunique'),
+).reset_index()
+
+OUTPUT_8_1_smallind = OUTPUT_8_1_smallind.groupby(['district', 'cycle']).agg(
+    avg_counting_hedging_smallind = ('counting_hedging_smallind', 'mean'),
 ).reset_index()
 
         
@@ -1809,7 +2036,7 @@ print("Creating avg_counting_hedging_ind_dem_primary and avg_counting_hedging_in
 OUTPUT_8_2_ind = OUTPUT_1[
     (OUTPUT_1['election.type'] == 'P') & 
     (OUTPUT_1['contributor.type'] == 'I') &
-    (OUTPUT_1['later_than_special'] != 1)
+    (OUTPUT_1['later_than_special'] != 1) 
     ].groupby(['district', 'cycle', 'party']).agg(
     counting_hedging_ind_primary = ('bonica.rid', 'nunique'),
 ).reset_index()
@@ -1826,6 +2053,31 @@ OUTPUT_8_2_ind = OUTPUT_8_2_ind[['district', 'cycle', 'counting_hedging_ind_dem_
 OUTPUT_8_2_ind = OUTPUT_8_2_ind.groupby(['district', 'cycle']).agg(
     avg_counting_hedging_ind_dem_primary = ('counting_hedging_ind_dem_primary', 'mean'),
     avg_counting_hedging_ind_rep_primary = ('counting_hedging_ind_rep_primary', 'mean'),
+).reset_index()
+
+# Creating avg_counting_hedging_smallind_dem_primary and avg_counting_hedging_smallind_rep_primary (Small Individual donors)
+print("Creating avg_counting_hedging_smallind_dem_primary and avg_counting_hedging_smallind_rep_primary...")
+OUTPUT_8_2_smallind = OUTPUT_1[
+    (OUTPUT_1['election.type'] == 'P') & 
+    (OUTPUT_1['contributor.type'] == 'I') &
+    (OUTPUT_1['later_than_special'] != 1) &
+    (OUTPUT_1['amount'] < 200)
+    ].groupby(['district', 'cycle', 'party']).agg(
+    counting_hedging_smallind_primary = ('bonica.rid', 'nunique'),
+).reset_index()
+
+OUTPUT_8_2_smallind = OUTPUT_8_2_smallind.pivot_table(
+    index=['district', 'cycle'],
+    columns='party',
+    values='counting_hedging_smallind_primary',
+    fill_value=0
+).reset_index().rename(columns = {100.0 : "counting_hedging_smallind_dem_primary", 
+                                  200.0 : "counting_hedging_smallind_rep_primary"})
+OUTPUT_8_2_smallind = OUTPUT_8_2_smallind[['district', 'cycle', 'counting_hedging_smallind_dem_primary', 'counting_hedging_smallind_rep_primary']] # keeping only Dems and Reps
+                                  
+OUTPUT_8_2_smallind = OUTPUT_8_2_smallind.groupby(['district', 'cycle']).agg(
+    avg_counting_hedging_smallind_dem_primary = ('counting_hedging_smallind_dem_primary', 'mean'),
+    avg_counting_hedging_smallind_rep_primary = ('counting_hedging_smallind_rep_primary', 'mean'),
 ).reset_index()
 
 
@@ -1857,6 +2109,7 @@ OUTPUT_8_3_corp = OUTPUT_8_3_corp.groupby(['district', 'cycle']).agg(
     # hedging_money_general_normalized_corp = ('n_hedging', 'mean')
 ).reset_index()
 
+
 OUTPUT_8_3_ind = OUTPUT_1[
     (OUTPUT_1['election.type'] == 'G') & 
     (OUTPUT_1['contributor.type'] == 'I') & 
@@ -1880,6 +2133,30 @@ OUTPUT_8_3_ind = OUTPUT_8_3_ind.groupby(['district', 'cycle']).agg(
     hedging_money_general_ind = ('hedging', 'mean'),
 ).reset_index()
 
+OUTPUT_8_3_smallind = OUTPUT_1[
+    (OUTPUT_1['election.type'] == 'G') & 
+    (OUTPUT_1['contributor.type'] == 'I') & 
+    (OUTPUT_1['later_than_special'] != 1) &
+    (OUTPUT_1['amount'] < 200)
+    ].groupby(['district', 'cycle', 'bonica.cid', 'contributor.name', 'party']).agg(
+    total_amount = ('amount', 'sum'),
+).reset_index()
+
+OUTPUT_8_3_smallind = OUTPUT_8_3_smallind.pivot_table(
+    index=['district', 'cycle', 'bonica.cid', 'contributor.name'],
+    columns='party',
+    values='total_amount',
+    fill_value=0
+).reset_index().rename(columns = {100.0 : "total_amount_dem", 
+                                  200.0 : "total_amount_rep"})
+OUTPUT_8_3_smallind = OUTPUT_8_3_smallind[['district', 'cycle', 'bonica.cid', 'contributor.name', 'total_amount_dem', 'total_amount_rep']]
+
+OUTPUT_8_3_smallind['hedging'] = abs(OUTPUT_8_3_smallind['total_amount_dem'] - OUTPUT_8_3_smallind['total_amount_rep'])
+
+OUTPUT_8_3_smallind = OUTPUT_8_3_smallind.groupby(['district', 'cycle']).agg(
+    hedging_money_general_smallind = ('hedging', 'mean'),
+).reset_index()
+
 
 # Creating hedging_money_dem_primary_corp and hedging_money_rep_primary_corp
 print("Creating hedging_money_dem_primary_corp, hedging_money_rep_primary_corp, hedging_money_dem_primary_ind, and hedging_money_rep_primary_ind...")
@@ -1900,6 +2177,14 @@ OUTPUT_8_4_ind = OUTPUT_1[
     total_amount = ('amount', 'sum'),
 ).reset_index()
 
+OUTPUT_8_4_smallind = OUTPUT_1[
+    (OUTPUT_1['election.type'] == 'P') & 
+    (OUTPUT_1['contributor.type'] == 'I') & 
+    (OUTPUT_1['later_than_special'] != 1) &
+    (OUTPUT_1['amount'] < 200)
+    ].groupby(['district', 'cycle', 'bonica.cid', 'contributor.name', 'party', 'bonica.rid']).agg(
+    total_amount = ('amount', 'sum'),
+).reset_index()
 
 print("Nr of companies that are giving to more than one candidate in the primaries", 
       OUTPUT_8_4_corp[OUTPUT_8_4_corp.duplicated(subset=['district', 'cycle', 'bonica.cid'], keep=False)]['bonica.cid'].nunique())
@@ -1913,10 +2198,17 @@ print("Nr of individuals that are giving to more than one candidate in the prima
 print("Nr of individuals that are giving to more than one candidate in the primaries in the same party", 
       OUTPUT_8_4_ind[OUTPUT_8_4_ind.duplicated(subset=['district', 'cycle', 'bonica.cid', 'party'], keep=False)]['bonica.cid'].nunique())
 
+print("Nr of small individuals that are giving to more than one candidate in the primaries", 
+      OUTPUT_8_4_smallind[OUTPUT_8_4_smallind.duplicated(subset=['district', 'cycle', 'bonica.cid'], keep=False)]['bonica.cid'].nunique())
+
+print("Nr of small individuals that are giving to more than one candidate in the primaries in the same party", 
+      OUTPUT_8_4_smallind[OUTPUT_8_4_smallind.duplicated(subset=['district', 'cycle', 'bonica.cid', 'party'], keep=False)]['bonica.cid'].nunique())
+
 
 # Getting duplicate rows, so we understand what parties are contributing to the same party's candidates in the primaries
 OUTPUT_8_4_corp = OUTPUT_8_4_corp[OUTPUT_8_4_corp.duplicated(subset=['district', 'cycle', 'bonica.cid', 'party'], keep=False)]
 OUTPUT_8_4_ind = OUTPUT_8_4_ind[OUTPUT_8_4_ind.duplicated(subset=['district', 'cycle', 'bonica.cid', 'party'], keep=False)]
+OUTPUT_8_4_smallind = OUTPUT_8_4_smallind[OUTPUT_8_4_smallind.duplicated(subset=['district', 'cycle', 'bonica.cid', 'party'], keep=False)]
 
 # We will apply a function for both Dems and Reps separately
 def calculate_party_hedging(data, party_code, party_name, contributor_type):
@@ -1932,7 +2224,7 @@ def calculate_party_hedging(data, party_code, party_name, contributor_type):
     party_name : str
         The name to use in output column names (e.g., 'dem' or 'rep')
     contributor_type : str
-        The type of contributor ('corp' or 'ind')
+        The type of contributor ('corp', 'ind', or 'smallind')
         
     Returns:
     --------
@@ -1984,10 +2276,7 @@ def calculate_party_hedging(data, party_code, party_name, contributor_type):
     )
     
     # Naming variable based on contribution type
-    if contributor_type == 'ind':
-        column_name = f"hedging_money_{party_name}_primary_ind"
-    else:  # for 'corp'
-        column_name = f"hedging_money_{party_name}_primary_corp"        
+    column_name = f"hedging_money_{party_name}_primary_{contributor_type}"
 
     # Aggregate by district and cycle
     result = party_data_pivot.groupby(['district', 'cycle']).agg(
@@ -2006,6 +2295,11 @@ print("Processing hedging metrics for Dems and Reps separately (individual)...")
 dem_results_ind = calculate_party_hedging(OUTPUT_8_4_ind, 100, 'dem', 'ind')
 rep_results_ind = calculate_party_hedging(OUTPUT_8_4_ind, 200, 'rep', 'ind')
 
+print("Processing hedging metrics for Dems and Reps separately (small individual)...")
+dem_results_smallind = calculate_party_hedging(OUTPUT_8_4_smallind, 100, 'dem', 'smallind')
+rep_results_smallind = calculate_party_hedging(OUTPUT_8_4_smallind, 200, 'rep', 'smallind')
+
+
 OUTPUT_8_4_corp = pd.merge(
     dem_results_corp,
     rep_results_corp,
@@ -2019,7 +2313,14 @@ OUTPUT_8_4_ind = pd.merge(
     on=['district', 'cycle'],
     how='outer'
 )
-        
+
+OUTPUT_8_4_smallind = pd.merge(
+    dem_results_smallind,
+    rep_results_smallind,
+    on=['district', 'cycle'],
+    how='outer'
+)
+    
 
 OUTPUT_8_corp = OUTPUT_8_1_corp.copy()
 for i in range(2, 5):
@@ -2057,85 +2358,45 @@ for i in range(2, 5):
     else:
         continue
 
+OUTPUT_8_smallind = OUTPUT_8_1_smallind.copy()
+for i in range(2, 5):
+    print(f"Merging OUTPUT_8_smallind with OUTPUT_8_{i}_smallind")
+    df_name = f"OUTPUT_8_{i}_smallind"
+    df = globals()[df_name]
+    
+    # Merge with the current result
+    OUTPUT_8_smallind = pd.merge(
+        OUTPUT_8_smallind,
+        df,
+        on=['cycle', 'district'],
+        how='outer'
+    )
+    if i == range(2, 5)[-1]:
+        print("Merge complete!")
+    else:
+        continue
+
+
 OUTPUT_8 = pd.merge(
     OUTPUT_8_corp,
     OUTPUT_8_ind,
     on=['cycle', 'district'],
     how = 'outer'
-    )
+)
 
-# # Merging with districts that have a creation year or discontinuation year or both after 1980
-# print("Merging OUTPUT_8 with new_districts_df")
-# OUTPUT_8 = pd.merge(
-#     OUTPUT_8,
-#     new_districts_df,
-#     on=['district', 'cycle'],
-#     how='left'
-#     )
-
-
-# # Missing values of real_data are replaced with 1, because they are real data (district has existed prior to 1980 and has existed until 2024)
-# OUTPUT_8.loc[OUTPUT_8['real_data'].isna(), 'real_data'] = 1
-# # Re-ordering data
-# OUTPUT_8 = OUTPUT_8.sort_values(by=['district', 'cycle'], ascending=[True, True])
-# columns_list = ['district', 'cycle', 'real_data']
-# cols = columns_list + [
-#     col for col in OUTPUT_8.columns if col not in columns_list]
-# OUTPUT_8 = OUTPUT_8[cols]
-
-# # Merging with cartesian product
-# print("Merging OUTPUT_8 with OUTPUT_0")
-# OUTPUT_8 = pd.merge(
-#     OUTPUT_0,
-#     OUTPUT_8,
-#     on=['cycle', 'district'],
-#     how='outer'
-#     )
-# # Missing values of real_data are replaced with 0, these don't exist but are fake rows to balance our dataset
-# OUTPUT_8.loc[OUTPUT_8['real_data'].isna(), 'real_data'] = 0
-# # Missing values of other columns are replaced with 0
-# mask = OUTPUT_8['real_data'] == 1
-# data_columns = [col for col in OUTPUT_8.columns if col not in ['district', 'cycle', 'real_data']]
-# OUTPUT_8.loc[mask, data_columns] = OUTPUT_8.loc[mask, data_columns].fillna(0)
-
-# print("Merge complete!")
-
-
-# # NOTE: We have already created real_data dummy, we get this information from OUTPUT_2 (the 'universe' of district-cycles) and avoid creating a new one for district-cycle individual contributions
-# OUTPUT_8 = pd.merge(
-#     OUTPUT_2[['district', 'cycle', 'real_data']], # we only need this information from OUTPUT_2
-#     OUTPUT_8,
-#     on=['cycle', 'district'],
-#     how='outer'
-#     )
-
-# # Missing values of other columns are replaced with 0
-# mask = OUTPUT_3['real_data'] == 1
-# data_columns = [col for col in OUTPUT_3.columns if col not in ['district', 'cycle', 'real_data']]
-# OUTPUT_3.loc[mask, data_columns] = OUTPUT_3.loc[mask, data_columns].fillna(0)
-
-# # Dataset is balanced and there is no need to merge with OUTPUT_0!
-
-# OUTPUT_3.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_3.csv"), index=False)
-
-# OUTPUT_3 = OUTPUT_3.drop(columns = 'real_data') # no duplicate columns when merging with OUTPUT_2
-    
-
-
-# OUTPUT_8 = pd.merge(
-#     OUTPUT_0,
-#     OUTPUT_8,
-#     on = ['district', 'cycle'],
-#     how = 'outer'
-#     )
-
+OUTPUT_8 = pd.merge(
+    OUTPUT_8,
+    OUTPUT_8_smallind,
+    on=['cycle', 'district'],
+    how = 'outer'
+)
 
 # NOTE: We have already created real_data dummy, we get this information from OUTPUT_2 (the 'universe' of district-cycles) and avoid creating a new one for district-cycle individual contributions
 OUTPUT_8 = pd.merge(
-    OUTPUT_2[['district', 'cycle', 'real_data']], # we only need this information from OUTPUT_2
+    new_districts_df, # we only need this information from OUTPUT_2
     OUTPUT_8,
     on=['cycle', 'district'],
-    how='outer'
+    how='left'
     )
 
 # Checking...
@@ -2154,7 +2415,9 @@ print("  - real_data == 0 and (avg_counting_hedging_corp_dem_primary != Nan or a
 # OUTPUT_8_processed = OUTPUT_8.fillna(0)
 OUTPUT_8 = OUTPUT_8.fillna(0)
 OUTPUT_8.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_8.csv"), index=False)
-OUTPUT_8 = OUTPUT_8.drop(columns = 'real_data') # no duplicate columns when merging with OUTPUT_2
+OUTPUT_8 = OUTPUT_8.drop(columns = ['real_data', 'territorial']) # no duplicate columns when merging with OUTPUT_2
+
+
 
 #%%
 
@@ -2408,10 +2671,10 @@ for i in range(2, 10):
         print("Merge complete!")
     
 OUTPUT_9 = pd.merge(
-    OUTPUT_0,
+    new_districts_df,
     OUTPUT_9,
     on = ['district', 'cycle'],
-    how = 'outer'
+    how = 'left'
     )
 
 # We have 'recipient.cfscore' and 'recipient.cfscore.dyn', but the latter is clearly better, although has missing values
@@ -2419,13 +2682,404 @@ OUTPUT_9 = pd.merge(
 
 OUTPUT_9.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_9.csv"), index = False)
 
+OUTPUT_9 = OUTPUT_9.drop(columns = ['real_data', 'territorial'])
+
+#%%
+
+### OUTPUT_2_ext, OUTPUT_3_ext, OUTPUT_4_ext, and OUTPUT_8_ext
+
+### Creating extended datasets with vars that apply the condition of filter contributions between death_date and spec_election_date
+# - OUTPUT_2
+# - OUTPUT_3
+# - OUTPUT_4
+# - OUTPUT_8
+
+print("3-step processing of _ext_ (extended) datasets")
+
+def import_module_from_path(module_name, file_path):
+    """Import a module from a specific file path"""
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+script_path = os.path.join(code_folder, "outputs_scripts", "create_ext_vars.py")
+CEV = import_module_from_path("CEV", script_path)
+create_treatment_filtered_outputs = CEV.create_treatment_filtered_outputs
+create_output8_treatment_filtered = CEV.create_output8_treatment_filtered
+add_gen_np_variables = CEV.add_gen_np_variables
+add_gen_np_variables_output8 = CEV.add_gen_np_variables_output8
+add_gen_np_spec_variables = CEV.add_gen_np_spec_variables
+add_gen_np_spec_variables_output8 = CEV.add_gen_np_spec_variables_output8
+
+if __name__ == '__main__':
+
+    # Execution
+    
+    # 1. create_treatment_filtered_outputs and create_output8_treatment_filtered
+    print("***** STEP 1 *****")
+    print("Processing OUTPUT_2_ext, OUTPUT_3_ext, and OUTPUT_4_ext...")
+    OUTPUT_2_ext = create_treatment_filtered_outputs(OUTPUT_1, OUTPUT_7, OUTPUT_2, 'OUTPUT_2', single_death_districts, multiple_death_districts)  # latter two need to be redefined for module
+    OUTPUT_3_ext = create_treatment_filtered_outputs(OUTPUT_1, OUTPUT_7, OUTPUT_3, 'OUTPUT_3', single_death_districts, multiple_death_districts)
+    OUTPUT_4_1_ext = create_treatment_filtered_outputs(OUTPUT_1, OUTPUT_7, OUTPUT_4_1, 'OUTPUT_4_1', single_death_districts, multiple_death_districts)
+    OUTPUT_4_2_ext = create_treatment_filtered_outputs(OUTPUT_1, OUTPUT_7, OUTPUT_4_2, 'OUTPUT_4_2', single_death_districts, multiple_death_districts)
+    
+    print("Processing OUTPUT_8_ext...")
+    OUTPUT_8_ext = create_output8_treatment_filtered(OUTPUT_1, OUTPUT_7, OUTPUT_8, single_death_districts, multiple_death_districts)
+
+    # 2. add_gen_np_variables and add_gen_np_variables_output8    
+    print("***** STEP 2 *****")
+    print("Adding gen_np variables to OUTPUT_2_ext, OUTPUT_3_ext, and OUTPUT_4_ext...")
+    OUTPUT_2_ext = add_gen_np_variables(OUTPUT_1, OUTPUT_7, OUTPUT_2_ext, 'OUTPUT_2', single_death_districts, multiple_death_districts)
+    OUTPUT_3_ext = add_gen_np_variables(OUTPUT_1, OUTPUT_7, OUTPUT_3_ext, 'OUTPUT_3', single_death_districts, multiple_death_districts)
+    OUTPUT_4_1_ext = add_gen_np_variables(OUTPUT_1, OUTPUT_7, OUTPUT_4_1_ext, 'OUTPUT_4_1', single_death_districts, multiple_death_districts)
+    OUTPUT_4_2_ext = add_gen_np_variables(OUTPUT_1, OUTPUT_7, OUTPUT_4_2_ext, 'OUTPUT_4_2', single_death_districts, multiple_death_districts)
+    
+    print("Adding gen_np variables to OUTPUT_8_ext...")    
+    OUTPUT_8_ext = add_gen_np_variables_output8(OUTPUT_1, OUTPUT_7, OUTPUT_8_ext, single_death_districts, multiple_death_districts)
+    
+    # 3. add_gen_np_spec_variables and add_gen_np_spec_variables_output8    
+    print("***** STEP 3 *****")
+    print("Adding gen_np_spec variables to OUTPUT_2_ext, OUTPUT_3_ext, and OUTPUT_4_ext...")
+    OUTPUT_2_ext = add_gen_np_spec_variables(OUTPUT_1, OUTPUT_7, OUTPUT_2_ext, 'OUTPUT_2', single_death_districts, multiple_death_districts)
+    OUTPUT_3_ext = add_gen_np_spec_variables(OUTPUT_1, OUTPUT_7, OUTPUT_3_ext, 'OUTPUT_3', single_death_districts, multiple_death_districts)
+    OUTPUT_4_1_ext = add_gen_np_spec_variables(OUTPUT_1, OUTPUT_7, OUTPUT_4_1_ext, 'OUTPUT_4_1', single_death_districts, multiple_death_districts)
+    OUTPUT_4_2_ext = add_gen_np_spec_variables(OUTPUT_1, OUTPUT_7, OUTPUT_4_2_ext, 'OUTPUT_4_2', single_death_districts, multiple_death_districts)
+    print("Adding gen_np_spec variables to OUTPUT_8_ext...")
+    OUTPUT_8_ext = add_gen_np_spec_variables_output8(OUTPUT_1, OUTPUT_7, OUTPUT_8_ext, single_death_districts, multiple_death_districts)
+
+    
+
+# test = OUTPUT_2_ext[[
+#     'district', 'cycle', 
+#     # 'treat_1', 'treat_2', 'treat_3', 'real_data',
+#     # 'death_date', 'special_elections_date',
+#     'total_amount_gen', 'tran_count_gen', 
+#     'total_amount_gen_1', 'tran_count_gen_1',
+#     'total_amount_gen_2', 'tran_count_gen_2',
+#     'total_amount_gen_3', 'tran_count_gen_3',
+#     # 'total_amount_gen_np', 'tran_count_gen_np',
+#     'total_amount_gen_np_1', 'tran_count_gen_np_1',
+#     'total_amount_gen_np_2', 'tran_count_gen_np_2',
+#     'total_amount_gen_np_3', 'tran_count_gen_np_3',
+#     'total_amount_gen_np_spec_1', 'tran_count_gen_np_spec_1',
+#     'total_amount_gen_np_spec_2', 'tran_count_gen_np_spec_2',
+#     'total_amount_gen_np_spec_3', 'tran_count_gen_np_spec_3'
+    
+#     ]]
+
+# test = OUTPUT_3_ext[[
+#     'district', 'cycle', 
+#     # 'treat_1', 'treat_2', 'treat_3', 'real_data',
+#     # 'death_date', 'special_elections_date',
+#     'total_amount_gen_corp', 'tran_count_gen_corp', 
+#     'total_amount_gen_corp_1', 'tran_count_gen_corp_1',
+#     'total_amount_gen_corp_2', 'tran_count_gen_corp_2',
+#     'total_amount_gen_corp_3', 'tran_count_gen_corp_3',
+#     # 'total_amount_gen_np', 'tran_count_gen_np',
+#     'total_amount_gen_np_corp_1', 'tran_count_gen_np_corp_1',
+#     'total_amount_gen_np_corp_2', 'tran_count_gen_np_corp_2',
+#     'total_amount_gen_np_corp_3', 'tran_count_gen_np_corp_3',
+#     'total_amount_gen_np_spec_corp_1', 'tran_count_gen_np_spec_corp_1',
+#     'total_amount_gen_np_spec_corp_2', 'tran_count_gen_np_spec_corp_2',
+#     'total_amount_gen_np_spec_corp_3', 'tran_count_gen_np_spec_corp_3'
+    
+#     ]]
+
+# test2_corp = OUTPUT_8_ext[[
+#     'district', 'cycle', 
+#     # 'treat_1', 'treat_2', 'treat_3', # 'real_data',
+#     # 'death_date', 'special_elections_date',
+#     'avg_counting_hedging_corp', 
+#     'avg_counting_hedging_corp_1', 
+#     'avg_counting_hedging_corp_2',
+#     'avg_counting_hedging_corp_3',
+
+#     # 'avg_counting_hedging_np_corp',
+#     'avg_counting_hedging_np_corp_1',
+#     'avg_counting_hedging_np_corp_2',
+#     'avg_counting_hedging_np_corp_3',
+
+#     # 'avg_counting_hedging_np_spec_corp',
+#     'avg_counting_hedging_np_spec_corp_1',
+#     'avg_counting_hedging_np_spec_corp_2',
+#     'avg_counting_hedging_np_spec_corp_3',
+    
+#     ]]
+
+
+# test2_ind = OUTPUT_8_ext[[
+#     'district', 'cycle', 
+#     # 'treat_1', 'treat_2', 'treat_3', # 'real_data',
+#     # 'death_date', 'special_elections_date',
+#     'avg_counting_hedging_ind', 
+#     'avg_counting_hedging_ind_1', 
+#     'avg_counting_hedging_ind_2',
+#     'avg_counting_hedging_ind_3',
+
+#     # 'avg_counting_hedging_np_ind',
+#     'avg_counting_hedging_np_ind_1',
+#     'avg_counting_hedging_np_ind_2',
+#     'avg_counting_hedging_np_ind_3',
+
+#     # 'avg_counting_hedging_np_spec_ind',
+#     'avg_counting_hedging_np_spec_ind_1',
+#     'avg_counting_hedging_np_spec_ind_2',
+#     'avg_counting_hedging_np_spec_ind_3',
+    
+#     ]]
+
+
+
+#%%
+
+
+# OUTPUT_2_ext_2 = OUTPUT_2_ext.copy()
+# OUTPUT_3_ext_2 = OUTPUT_3_ext.copy()
+# OUTPUT_4_1_ext_2 = OUTPUT_4_1_ext.copy()
+# OUTPUT_4_2_ext_2 = OUTPUT_4_2_ext.copy()
+# OUTPUT_8_ext_2 = OUTPUT_8_ext.copy()
+
+
+print("Adding treatment variables...")
+for df_name, df in [('OUTPUT_2_ext', OUTPUT_2_ext), ('OUTPUT_3_ext', OUTPUT_3_ext), 
+                     ('OUTPUT_4_1_ext', OUTPUT_4_1_ext), ('OUTPUT_4_2_ext', OUTPUT_4_2_ext),
+                     ('OUTPUT_8_ext', OUTPUT_8_ext)]:
+    # Merge treatment variables
+    df_merged = pd.merge(
+        df,
+        OUTPUT_7[['district', 'cycle', 'treat_1', 'treat_2', 'treat_3', 'death_date', 'special_elections_date']],
+        on=['district', 'cycle'],
+        how='left'
+    )    
+    
+    print(df_merged.columns)
+    
+    # df_merged = df.copy()
+    
+    # Convert all columns to numeric except district and date columns
+    print(f"Converting {df_name} columns to numeric...")
+    for col in df_merged.columns:
+        if col not in ['district', 'death_date', 'special_elections_date']:
+            df_merged[col] = pd.to_numeric(df_merged[col], errors='ignore')
+    
+    # Ensure date columns are datetime
+    for col in df_merged.columns:
+        if col in ['death_date', 'special_elections_date']:
+            df_merged[col] = pd.to_datetime(df_merged[col], errors='ignore')
+    
+
+    # if df_name == 'OUTPUT_2_ext':
+    #     first_cols = ['district', 'cycle', 'treat_1', 'treat_2', 'treat_3', 'death_date', 'special_elections_date']
+    # else:
+    #     first_cols = ['district', 'cycle', ]
+
+    # Reorder columns: district, cycle, treat_1, treat_2, treat_3, then the rest
+    first_cols = ['district', 'cycle', 'treat_1', 'treat_2', 'treat_3', 'death_date', 'special_elections_date']
+    other_cols = [col for col in df_merged.columns if col not in first_cols]
+    df_merged = df_merged[first_cols + other_cols]
+    df_merged = df_merged.sort_values(by = ['district', 'cycle'])
+    
+    # Reassign
+    if df_name == 'OUTPUT_2_ext':
+        OUTPUT_2_ext = df_merged
+    elif df_name == 'OUTPUT_3_ext':
+        OUTPUT_3_ext = df_merged
+    elif df_name == 'OUTPUT_4_1_ext':
+        OUTPUT_4_1_ext = df_merged
+    elif df_name == 'OUTPUT_4_2_ext':
+        OUTPUT_4_2_ext = df_merged
+    elif df_name == 'OUTPUT_8_ext':
+        OUTPUT_8_ext = df_merged    
+
+print("Finished processing all extended outputs!")
+
+
+# Adding 'real_data' and 'territorial'
+OUTPUT_3_ext = pd.merge(
+    OUTPUT_2_ext[['district', 'cycle', 'real_data', 'territorial']],
+    OUTPUT_3_ext,
+    on = ['district', 'cycle'],
+    how = 'left'
+    )
+
+OUTPUT_4_1_ext = pd.merge(
+    OUTPUT_2_ext[['district', 'cycle', 'real_data', 'territorial']],
+    OUTPUT_4_1_ext,
+    on = ['district', 'cycle'],
+    how = 'left'
+    )
+
+OUTPUT_4_2_ext = pd.merge(
+    OUTPUT_2_ext[['district', 'cycle', 'real_data', 'territorial']],
+    OUTPUT_4_2_ext,
+    on = ['district', 'cycle'],
+    how = 'left'
+    )
+
+OUTPUT_8_ext = pd.merge(
+    OUTPUT_2_ext[['district', 'cycle', 'real_data', 'territorial']],
+    OUTPUT_8_ext,
+    on = ['district', 'cycle'],
+    how = 'left'
+    )
+
+
+print("OUTPUT_2_ext shape:", OUTPUT_2_ext.shape)
+print("OUTPUT_3_ext shape:", OUTPUT_3_ext.shape)
+print("OUTPUT_4_1_ext shape:", OUTPUT_4_1_ext.shape)
+print("OUTPUT_4_2_ext shape:", OUTPUT_4_2_ext.shape)
+print("OUTPUT_8_ext shape:", OUTPUT_8_ext.shape)
+
+OUTPUT_2_ext = OUTPUT_2_ext.fillna(0)
+OUTPUT_3_ext = OUTPUT_3_ext.fillna(0)
+OUTPUT_4_1_ext = OUTPUT_4_1_ext.fillna(0)
+OUTPUT_4_2_ext = OUTPUT_4_2_ext.fillna(0)
+OUTPUT_8_ext = OUTPUT_8_ext.fillna(0)
+
+print("Saving extended output datasets...")
+OUTPUT_2_ext.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_2_ext.csv"), index=False)
+OUTPUT_3_ext.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_3_ext.csv"), index=False)
+OUTPUT_4_1_ext.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_4_1_ext.csv"), index=False)
+OUTPUT_4_2_ext.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_4_2_ext.csv"), index=False)
+OUTPUT_8_ext.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_8_ext.csv"), index=False)
+print("All extended datasets saved successfully!")
+
+
+
+OUTPUT_3_ext = OUTPUT_3_ext.drop(
+    columns = 
+    ['real_data', 'territorial',
+     'treat_1', 'treat_2', 'treat_3', 'death_date',
+     'special_elections_date']
+    ) # no duplicate columns when merging with OUTPUT_2
+
+OUTPUT_4_1_ext = OUTPUT_4_1_ext.drop(
+    columns = 
+    ['real_data', 'territorial',
+     'treat_1', 'treat_2', 'treat_3', 'death_date',
+     'special_elections_date']
+    ) # no duplicate columns when merging with OUTPUT_2
+
+OUTPUT_4_2_ext = OUTPUT_4_2_ext.drop(
+    columns = 
+    ['real_data', 'territorial',
+     'treat_1', 'treat_2', 'treat_3', 'death_date',
+     'special_elections_date']
+    ) # no duplicate columns when merging with OUTPUT_2
+
+OUTPUT_8_ext = OUTPUT_8_ext.drop(
+    columns = 
+    ['real_data', 'territorial',
+     'treat_1', 'treat_2', 'treat_3', 'death_date',
+     'special_elections_date']
+    ) # no duplicate columns when merging with OUTPUT_2
+
+#%%
+
+
+def get_amount_sum(df, district=None, cycle=None, electiontype=None):
+    """
+    Get the sum of 'amount' variable for a given dataframe with optional filtering.
+    
+    # Get total amount for CA05 across all cycles
+    get_amount_sum(OUTPUT_1, district='CA05')
+    
+    # Get total amount for cycle 1988 across all districts
+    get_amount_sum(OUTPUT_1, cycle=1988)
+    
+    # Get total amount for CA05 in 1988
+    get_amount_sum(OUTPUT_1, district='CA05', cycle=1988)
+        
+    # Get total amount for multiple districts and cycles
+    get_amount_sum(OUTPUT_1, district=['CA05', 'NY01'], cycle=[1984, 1988])
+    """
+    
+    # Start with a copy to avoid modifying original
+    filtered_df = df.copy()
+    
+    # Apply district filter if provided
+    if district is not None:
+        if isinstance(district, list):
+            filtered_df = filtered_df[filtered_df['district'].isin(district)]
+        else:
+            filtered_df = filtered_df[filtered_df['district'] == district]
+    
+    # Apply cycle filter if provided
+    if cycle is not None:
+        if isinstance(cycle, list):
+            filtered_df = filtered_df[filtered_df['cycle'].isin(cycle)]
+        else:
+            filtered_df = filtered_df[filtered_df['cycle'] == cycle]
+            
+    # Apply election type filter if provided
+    if electiontype is not None:
+        if isinstance(electiontype, list):
+            filtered_df = filtered_df[filtered_df['election.type'].isin(electiontype)]
+        else:
+            filtered_df = filtered_df[filtered_df['election.type'] == electiontype]
+    
+    # Check if 'amount' column exists
+    if 'amount' not in filtered_df.columns:
+        print("Warning: 'amount' column not found in dataframe")
+        return 0
+    
+    # Calculate and return sum
+    total = filtered_df['amount'].sum()
+    
+    # Print summary
+    print("Filters applied:")
+    print(f"  District: {district if district is not None else 'All'}")
+    print(f"  Cycle: {cycle if cycle is not None else 'All'}")
+    print(f"  Election Type: {electiontype if electiontype is not None else 'All'}")
+    print(f"  Number of rows: {len(filtered_df):,}")
+    print(f"  Total amount: ${total:,.2f}")
+    
+    return total
+
+# get_amount_sum(OUTPUT_1, district=['CA32'], cycle=[2002], electiontype=['G', 'S'])
+
 
 #%%
 
 ## FINAL MERGE OF ALL OUTPUTS
 
+
 print("..." * 5)
-print("Merging all (OUTPUTS_2 to OUTPUTS_9)")
+print("Merging all extended datasets: OUTPUTS_2_ext, OUTPUT_3_ext, OUTPUT_4_1_ext, OUTPUT_4_2_ext, and OUTPUT_8_ext")
+
+OUTPUT_1_final_collapsed_ext = OUTPUT_2_ext.copy()
+
+ext_datasets = [
+    ('OUTPUT_3_ext', OUTPUT_3_ext),
+    ('OUTPUT_4_1_ext', OUTPUT_4_1_ext),
+    ('OUTPUT_4_2_ext', OUTPUT_4_2_ext),
+    ('OUTPUT_8_ext', OUTPUT_8_ext)
+]
+
+for df_name, df in ext_datasets:
+    print(f"Merging OUTPUT_1_final_collapsed_ext with {df_name}")
+    OUTPUT_1_final_collapsed_ext = pd.merge(
+        OUTPUT_1_final_collapsed_ext,
+        df,
+        on=['cycle', 'district'],
+        how='outer'
+    )
+
+print("EXT merge complete!")
+
+print("\n\nFINAL EXT CHECK:\nLength of final EXT dataset:", len(OUTPUT_1_final_collapsed_ext),
+      "should be the same as all these EXT datasets")
+
+for df_name in ['OUTPUT_2_ext', 'OUTPUT_3_ext', 'OUTPUT_4_1_ext', 'OUTPUT_4_2_ext', 'OUTPUT_8_ext']:
+    df = globals()[df_name]
+    print(f"Length of {df_name}: {len(df)}")
+
+
+
+
+print("..." * 5)
+print("Merging all outputs: OUTPUTS_2 to OUTPUTS_9")
 
 OUTPUT_1_final_collapsed = OUTPUT_2.copy()
 for i in range(3, 10):
@@ -2451,1545 +3105,127 @@ for i in range(2, 10):
     df = globals()[df_name]
     
     print(f"Length of {df_name}: {len(df)}")
+
+
+print("Also, merging variables from _ext datasets (OUTPUT_2_ext, OUTPUT_3_ext, OUTPUT_4_1_ext, OUTPUT_4_2_ext, and OUTPUT_8_ext)")
+
+# Define the gen_np variables for OUTPUT_2, 3, 4_1, 4_2
+gen_np_vars_outputs_2_to_4 = [
+    'total_amount_gen_np',
+    'tran_count_gen_np',
+    'total_amount_gen_np_without_LTS1',
+    'tran_count_gen_np_without_LTS1',
+    'total_amount_dem_gen_np',
+    'tran_count_dem_gen_np',
+    'total_amount_dem_gen_np_without_LTS1',
+    'tran_count_dem_gen_np_without_LTS1',
+    'total_amount_rep_gen_np',
+    'tran_count_rep_gen_np',
+    'total_amount_rep_gen_np_without_LTS1',
+    'tran_count_rep_gen_np_without_LTS1'
+]
+
+# Define the gen_np variables for OUTPUT_8
+gen_np_vars_output8 = [
+    'hedging_money_general_np_corp',
+    'avg_counting_hedging_np_corp',
+    'hedging_money_general_np_ind',
+    'avg_counting_hedging_np_ind',
+    'hedging_money_general_np_smallind',
+    'avg_counting_hedging_np_smallind',
+]
+
+# Dictionary mapping datasets to their respective variable lists
+ext_datasets = {
+    'OUTPUTS_2_ext': (OUTPUT_2_ext, gen_np_vars_outputs_2_to_4),
+    'OUTPUT_3_ext': (OUTPUT_3_ext, gen_np_vars_outputs_2_to_4),
+    'OUTPUT_4_1_ext': (OUTPUT_4_1_ext, gen_np_vars_outputs_2_to_4),
+    'OUTPUT_4_2_ext': (OUTPUT_4_2_ext, gen_np_vars_outputs_2_to_4),
+    'OUTPUT_8_ext': (OUTPUT_8_ext, gen_np_vars_output8)
+}
+
+# Merge each dataset
+for dataset_name, (dataset, var_patterns) in ext_datasets.items():
+    print(f"  Merging {dataset_name}...")
+    
+    # Select columns that contain any of the variable patterns
+    cols_to_keep = ['district', 'cycle']
+    for col in dataset.columns:
+        if any(pattern in col for pattern in var_patterns):
+            print(f"    From {dataset_name}, keeping variable: {col}")
+            cols_to_keep.append(col)
+    
+    # Check if we found all expected variables
+    # Note: We expect at least as many columns as patterns (could be more with suffixes)
+    expected_count = len(var_patterns)
+    actual_count = len(cols_to_keep) - 2  # Subtract 'district' and 'cycle'
+    
+    if actual_count >= expected_count:
+        print(f"Found {actual_count} variables (expected at least {expected_count})")
+    else:
+        print(f"Warning: Found only {actual_count} variables, expected at least {expected_count}")
+        print(f"    Missing patterns might include: {var_patterns}")
+    
+    # Merge with the current result
+    OUTPUT_1_final_collapsed = pd.merge(
+        OUTPUT_1_final_collapsed,
+        dataset[cols_to_keep],
+        on=['cycle', 'district'],
+        how='left'
+    )
+    
+    print(f"\nMerged {len(cols_to_keep) - 2} variables from {dataset_name}")
+    print()
+
+print("Merge complete!")
+print(f"OUTPUT_1_final_collapsed now has {len(OUTPUT_1_final_collapsed.columns)} columns")
+
+
     
 #%%
 
 # Manually creating dictionary of variables
-OUTPUT_1_final_collapsed_dict = {
-    
-    # Entity-time variables
-    'district': {
-            'description': 'District code: two-letter state code followed by congressional district number. Used to merge various datasets',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_1 (Entity-time variables)'
-            },       
-    
-    'cycle': {
-            'description': 'Year of election cycle. Used to merge various datasets',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_1 (Entity-time variables)'
-            },       
-    
-    'real_data': {
-            'description': "Since we balance the panel data (i.e., have every cycle for each district), we use this dummy variable to indicate whether the district-cycle existed (value: 1) or not (value: 0), by scraping information from Wikipedia. We create the dummy when merging the grouped-by district and cycle contribution-level dataset (depending on the variables, either OUTPUT_2, OUTPUT_3, OUTPUT_4, or OUTPUT_8) with a dataset that contains all district and cycle combinations that were either created or discontinued after 1980 (new_districts_filtered.csv), since every DIME contribution comes after this election year. If the district-cycle was created before 1980 and has no discontinuation year, it implies the district's persistent existence in our period of interest (i.e., 1980 to 2024), meaning that the district will always receive 1 and we don't have to deal with this. If a district-cycle was either created or discontinued or both after 1980, then this district-cycle receives 1 if the cycle is between the district's creation and discontinuation year, while it receives 0 if the cycle is before the district's creation year or later than the district's discontinuation year. Missing values coming from 'fake districts' (real_data == 0) were replaced with zeros.",
-            'source': 'Wikipedia',
-            'origin_dataset': 'new_districts.html, new_districts.csv, new_districts_filtered.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_United_States_congressional_districts',
-            'output_relation': 'OUTPUT_2, OUTPUT_3, OUTPUT_4, OUTPUT_8 (Variables measured in or related to dollar amounts)'
-            },       
-    
-    # OUTPUT_2
-    'total_amount': {
-            'description': 'Total amount of all contribution types going to all election types in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count': {
-            'description': 'Number of transactions for total_amount',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_without_LTS1': {
-            'description': 'Total amount of all contribution types going to all election types before the date of the special election in that district-cycle, if applicable (measured in dollars). We get special elections date from our webscraping the Wikipedia page with this information (see variables in OUTPUT_7 for more details).',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_without_LTS1': {
-            'description': 'Number of transactions for total_amount_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_no_primary': {
-            'description': 'Total amount of all contribution types going to all election types (except primary elections) in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_no_primary': {
-            'description': 'Number of transactions for total_amount_no_primary',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_no_primary_without_LTS1': {
-            'description': 'Total amount of all contribution types going to all election types (except primary elections) before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_no_primary_without_LTS1': {
-            'description': 'Number of transactions for total_amount_no_primary_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_primary': {
-            'description': 'Total amount of all contribution types going to primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_primary': {
-            'description': 'Number of transactions for total_amount_primary',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_primary_without_LTS1': {
-            'description': 'Total amount of all contribution types going to primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_primary_without_LTS1': {
-            'description': 'Number of transactions for total_amount_primary_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_gen': {
-            'description': 'Total amount of all contribution types going to general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_gen': {
-            'description': 'Number of transactions for total_amount_gen',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_gen_without_LTS1': {
-            'description': 'Total amount of all contribution types going to general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_gen_without_LTS1': {
-            'description': 'Number of transactions for total_amount_gen_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_special': {
-            'description': 'Total amount of all contribution types going to special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_special': {
-            'description': 'Number of transactions for total_amount_special',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_special_without_LTS1': {
-            'description': 'Total amount of all contribution types going to special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_special_without_LTS1': {
-            'description': 'Number of transactions for total_amount_special_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_dem_gen': {
-            'description': 'Total amount of all contribution types going to Democratic candidate in general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_dem_gen': {
-            'description': 'Number of transactions for total_amount_dem_gen',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_dem_gen_without_LTS1': {
-            'description': 'Total amount of all contribution types going to Democratic candidate in general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_dem_gen_without_LTS1': {
-            'description': 'Number of transactions for total_amount_dem_gen_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_dem_primary': {
-            'description': 'Total amount of all contribution types going to Democratic candidates in primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_dem_primary': {
-            'description': 'Number of transactions for total_amount_dem_primary',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_dem_primary_without_LTS1': {
-            'description': 'Total amount of all contribution types going to Democratic candidates in primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_dem_primary_without_LTS1': {
-            'description': 'Number of transactions for total_amount_dem_primary_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_dem_special': {
-            'description': 'Total amount of all contribution types going to Democratic candidates in special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_dem_special': {
-            'description': 'Number of transactions for total_amount_dem_special',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_dem_special_without_LTS1': {
-            'description': 'Total amount of all contribution types going to Democratic candidates in special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_dem_special_without_LTS1': {
-            'description': 'Number of transactions for total_amount_dem_special_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_rep_gen': {
-            'description': 'Total amount of all contribution types going to Republican candidate in general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_rep_gen': {
-            'description': 'Number of transactions for total_amount_rep_gen',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_rep_gen_without_LTS1': {
-            'description': 'Total amount of all contribution types going to Republican candidate in general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_rep_gen_without_LTS1': {
-            'description': 'Number of transactions for total_amount_rep_gen_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_rep_primary': {
-            'description': 'Total amount of all contribution types going to Republican candidates in primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_rep_primary': {
-            'description': 'Number of transactions for total_amount_rep_primary',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_rep_primary_without_LTS1': {
-            'description': 'Total amount of all contribution types going to Republican candidates in primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_rep_primary_without_LTS1': {
-            'description': 'Number of transactions for total_amount_rep_primary_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_rep_special': {
-            'description': 'Total amount of all contribution types going to Republican candidates in special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_rep_special': {
-            'description': 'Number of transactions for total_amount_rep_special',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'total_amount_rep_special_without_LTS1': {
-            'description': 'Total amount of all contribution types going to Democratic candidates in special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },       
-    
-    'tran_count_rep_special_without_LTS1': {
-            'description': 'Number of transactions for total_amount_rep_special_without_LTS1',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_2'
-            },   
 
-    # OUTPUT_3    
-    'total_amount_corp': {
-            'description': 'Total amount of all corporate contributions going to all election types in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_corp': {
-            'description': 'Number of transactions for total_amount_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to all election types before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_no_primary_corp': {
-            'description': 'Total amount of all corporate contributions going to all election types (except primary elections) in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_no_primary_corp': {
-            'description': 'Number of transactions for total_amount_no_primary_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_no_primary_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to all election types (except primary elections) before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_no_primary_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_no_primary_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_primary_corp': {
-            'description': 'Total amount of all corporate contributions going to primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_primary_corp': {
-            'description': 'Number of transactions for total_amount_primary_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_primary_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_primary_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_primary_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_gen_corp': {
-            'description': 'Total amount of all corporate contributions going to general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_gen_corp': {
-            'description': 'Number of transactions for total_amount_gen_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_gen_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_gen_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_gen_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_special_corp': {
-            'description': 'Total amount of all corporate contributions going to special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_special_corp': {
-            'description': 'Number of transactions for total_amount_special_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_special_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_special_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_special_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_dem_gen_corp': {
-            'description': 'Total amount of all corporate contributions going to Democratic candidate in general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_dem_gen_corp': {
-            'description': 'Number of transactions for total_amount_dem_gen_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_dem_gen_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to Democratic candidate in general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_dem_gen_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_dem_gen_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_dem_primary_corp': {
-            'description': 'Total amount of all corporate contributions going to Democratic candidates in primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_dem_primary_corp': {
-            'description': 'Number of transactions for total_amount_dem_primary_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_dem_primary_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to Democratic candidates in primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_dem_primary_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_dem_primary_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_dem_special_corp': {
-            'description': 'Total amount of all corporate contributions going to Democratic candidates in special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_dem_special_corp': {
-            'description': 'Number of transactions for total_amount_dem_special_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_dem_special_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to Democratic candidates in special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_dem_special_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_dem_special_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_rep_gen_corp': {
-            'description': 'Total amount of all corporate contributions going to Republican candidate in general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_rep_gen_corp': {
-            'description': 'Number of transactions for total_amount_rep_gen_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_rep_gen_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to Republican candidate in general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_rep_gen_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_rep_gen_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_rep_primary_corp': {
-            'description': 'Total amount of all corporate contributions going to Republican candidates in primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_rep_primary_corp': {
-            'description': 'Number of transactions for total_amount_rep_primary_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_rep_primary_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to Republican candidates in primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_rep_primary_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_rep_primary_without_LTS1_corp',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_rep_special_corp': {
-            'description': 'Total amount of all corporate contributions going to Republican candidates in special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_rep_special_corp': {
-            'description': 'Number of transactions for total_amount_rep_special_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'total_amount_rep_special_without_LTS1_corp': {
-            'description': 'Total amount of all corporate contributions going to Democratic candidates in special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_3'
-            },       
-    
-    'tran_count_rep_special_without_LTS1_corp': {
-            'description': 'Number of transactions for total_amount_rep_special_without_LTS1_corp',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_3'
-            },   
-    
-    # OUTPUT_4
-    'total_amount_ind': {
-            'description': 'Total amount of all individual contributions going to all election types in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_ind': {
-            'description': 'Number of transactions for total_amount_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to all election types before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_no_primary_ind': {
-            'description': 'Total amount of all individual contributions going to all election types (except primary elections) in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_no_primary_ind': {
-            'description': 'Number of transactions for total_amount_no_primary_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_no_primary_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to all election types (except primary elections) before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_no_primary_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_no_primary_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_primary_ind': {
-            'description': 'Total amount of all individual contributions going to primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_primary_ind': {
-            'description': 'Number of transactions for total_amount_primary_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_primary_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_primary_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_primary_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_gen_ind': {
-            'description': 'Total amount of all individual contributions going to general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_gen_ind': {
-            'description': 'Number of transactions for total_amount_gen_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_gen_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_gen_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_gen_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_special_ind': {
-            'description': 'Total amount of all individual contributions going to special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_special_ind': {
-            'description': 'Number of transactions for total_amount_special_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_special_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_special_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_special_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_dem_gen_ind': {
-            'description': 'Total amount of all individual contributions going to Democratic candidate in general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_dem_gen_ind': {
-            'description': 'Number of transactions for total_amount_dem_gen_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_dem_gen_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to Democratic candidate in general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_dem_gen_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_dem_gen_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_dem_primary_ind': {
-            'description': 'Total amount of all individual contributions going to Democratic candidates in primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_dem_primary_ind': {
-            'description': 'Number of transactions for total_amount_dem_primary_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_dem_primary_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to Democratic candidates in primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_dem_primary_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_dem_primary_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_dem_special_ind': {
-            'description': 'Total amount of all individual contributions going to Democratic candidates in special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_dem_special_ind': {
-            'description': 'Number of transactions for total_amount_dem_special_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_dem_special_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to Democratic candidates in special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_dem_special_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_dem_special_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_rep_gen_ind': {
-            'description': 'Total amount of all individual contributions going to Republican candidate in general elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_rep_gen_ind': {
-            'description': 'Number of transactions for total_amount_rep_gen_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_rep_gen_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to Republican candidate in general elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_rep_gen_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_rep_gen_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_rep_primary_ind': {
-            'description': 'Total amount of all individual contributions going to Republican candidates in primary elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_rep_primary_ind': {
-            'description': 'Number of transactions for total_amount_rep_primary_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_rep_primary_without_LTS1_ind': {
-            'description': 'Total amount of all individual contributions going to Republican candidates in primary elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_rep_primary_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_rep_primary_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_rep_special_ind': {
-            'description': 'Total amount of all individual contributions going to Republican candidates in special elections only in that district-cycle (measured in dollars)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_rep_special_ind': {
-            'description': 'Number of transactions for total_amount_rep_special_ind',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'total_amount_rep_special_without_LTS1_ind': {
-            'description': 'Total amount of all corporate contributions going to Democratic candidates in special elections only before the date of the special election in that district-cycle, if applicable (measured in dollars)',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },       
-    
-    'tran_count_rep_special_without_LTS1_ind': {
-            'description': 'Number of transactions for total_amount_rep_special_without_LTS1_ind',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_4'
-            },   
-    
-    # OUTPUT_5
-    'district_color_35_65': {
-            'description': "First, we compute average vote share of Democratic Presidential nominee in the district in the closest Presidential election (var: district.pres.vs) across all cycles. Second, if this is between 35 and 65, we assign value 'C'. We assign value 'D' if this average is above 65, and value 'R' otherwise.",
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_5'
-            },       
-    
-    'district_color_30_70': {
-            'description': 'Similar to district_color_35_65, but we use 30 and 70 as thresholds.',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_5'
-            },       
-    
-    'district_color_40_60': {
-            'description': 'Similar to district_color_35_65, but we use 40 and 60 as thresholds.',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_5'
-            },       
-    
-    # OUTPUT_6
-    'totalvotes': {
-            'description': 'Total number of votes in general elections in that district-cycle',
-            'source': 'MIT_eMIT elections data',
-            'origin_dataset': '1976-2022-house.csv',
-            'relevant_URLs': 'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2',
-            'output_relation': 'OUTPUT_6'
-            },    
-    
-    'G_dem': {
-            'description': 'Vote share of Democratic candidate in general elections',
-            'source': 'MIT_eMIT elections data',
-            'origin_dataset': '1976-2022-house.csv',
-            'relevant_URLs': 'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2',
-            'output_relation': 'OUTPUT_6'
-            },       
+print("Identifying /outputs_scripts/create_dict.py...")
 
-    'G_rep': {
-            'description': 'Vote share of Republican candidate in general elections',
-            'source': 'MIT_eMIT elections data',
-            'origin_dataset': '1976-2022-house.csv',
-            'relevant_URLs': 'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2',
-            'output_relation': 'OUTPUT_6'
-            },       
+# Check if the file exists
+create_dict_path = os.path.join(code_folder, "outputs_scripts", "create_dict.py")
 
-    'G_dispersion': {
-            'description': 'Absolute difference between G_dem and G_rep',
-            'source': 'MIT_eMIT elections data',
-            'origin_dataset': '1976-2022-house.csv',
-            'relevant_URLs': 'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2',
-            'output_relation': 'OUTPUT_6'
-            },       
-    
-    'num_candidates': {
-            'description': 'Number of candidates running in general elections',
-            'source': 'MIT_eMIT elections data',
-            'origin_dataset': '1976-2022-house.csv',
-            'relevant_URLs': 'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2',
-            'output_relation': 'OUTPUT_6'
-            },       
-    
-    'G_dispersion_lag': {
-            'description': 'Lag of G_dispersion',
-            'source': 'MIT_eMIT elections data',
-            'origin_dataset': '1976-2022-house.csv',
-            'relevant_URLs': 'https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/IG0UN2',
-            'output_relation': 'OUTPUT_6'
-            },       
+if os.path.exists(create_dict_path):
+    print(f"Found: {create_dict_path}")
+    sys.path.insert(0, os.path.join(code_folder, "outputs_scripts"))
+    from create_dict import OUTPUT_1_final_collapsed_dict_df, OUTPUT_1_final_collapsed_ext_dict_df
+    print("Successfully imported dictionaries from create_dict.py")
+    print(" -> OUTPUT_1_final_collapsed_dict_df")
+    print(" -> OUTPUT_1_final_collapsed_ext_dict_df")
+else:
+    print(f"ERROR: File not found at {create_dict_path}")
+    print("Please check that the file exists and the path is correct.")
+    sys.exit(1)
 
-    'P_max_dem': {
-            'description': 'Vote share of Democratic candidates with highest vote share in primary elections',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-    
-    'P_min_dem': {
-            'description': 'Vote share of Democratic candidates with second highest vote share in primary elections',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-    
-    'P_dispersion_dem': {
-            'description': 'Absolute difference between P_max_dem and P_min_dem',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-    
-    'num_candidates_dem': {
-            'description': 'Number of candidates running in Democratic primary elections',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-    
-    'P_dispersion_dem_lag': {
-            'description': 'Lag of P_dispersion_dem',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-    
-    'P_max_rep': {
-            'description': 'Vote share of Republican candidates with highest vote share in primary elections',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
+#%%
 
-    'P_min_rep': {
-            'description': 'Vote share of Republican candidates with second highest vote share in primary elections',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-
-    'P_dispersion_rep': {
-            'description': 'Absolute difference between P_max_rep and P_min_rep',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-
-    'num_candidates_rep': {
-            'description': 'Number of candidates running in Republican primary elections',
-            'source': 'DIME data',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-
-    'P_dispersion_rep_lag': {
-            'description': 'Lag of P_dispersion_rep',
-            'source': 'DIME data',
-            'origin_dataset': 'election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_6'
-            },       
-
-    'Election_day': {
-            'description': 'Date of the general election held at that election cycle.',
-            'source': 'ChatGPT',
-            'origin_dataset': 'dime_recipients_1979_2024.csv',
-            'relevant_URLs': '',
-            'output_relation': 'OUTPUT_6'
-            },       
-
-    
-    # OUTPUT_7
-    'treat_1': {
-            'description': "First dummy we use to measure the impact of the death of an incumbent on contributions. For single death districts, we assign values of 0 before death of the incumbent, 1 at the district-cycle when the first (and only) death occurs and all following cycles. For multiple death districts, we assume the first death is the only death, hence the same logic is repeated. Otherwise, variable will always have zero values if districts are not part of the treatment (i.e., has never experienced the death of an incumbent).",
-            'source': 'Author (from merged datasets)',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'treat_2': {
-            'description': "Second dummy we use to measure the impact of the death of an incumbent on contributions. For single death districts, we repeat the logic we used for these districts in treat_1. For multiple death districts, we assign 0 to all cycles coming before the first death of an incumbent in that district's history, 1 at the district-cycle when the first death occurs. In the new election cycle the values are set back to 0, and only assigned 1 again at the following death. This is repeated for the second death, and all other deaths. Otherwise, variable will always have zero values if districts are not part of the treatment (i.e., has never experienced the death of an incumbent).",
-            'source': 'Author (from merged datasets)',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'death_unexpected_1': {
-            'description': "Dummy variable tied with death_age_1 and death_party_1, which all have non-missing values if there was a death in the district's history (based on whether treat_1 is 1). Indicates if death of candidate was unexpected or not (1 or 0), based on the cause of the death. This value is constant for entire district, if applicable, otherwise it will have missing values if districts are not part of the treatment (i.e., has never experienced the death of an incumbent).",
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'death_age_1': {
-            'description': "Numerical variable tied with death_unexpected_1 and death_party_1, which all have non-missing values if there was a death in the district's history (based on whether treat_1 is 1). Indicates age at which candidate passed away. This value is constant for entire district, if applicable, otherwise it will have missing values if districts are not part of the treatment (i.e., has never experienced the death of an incumbent).",
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'death_party_1': {
-            'description': "Categorical variable tied with death_unexpected_1 and death_age_1, which all have non-missing values if there was a death in the district's history (based on whether treat_1 is 1). Indicates party of candidate ('R' - Republican, 'D' - Democrat). This value is constant for entire district, if applicable, otherwise it will have missing values if districts are not part of the treatment (i.e., has never experienced the death of an incumbent).",
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'death_unexpected_2': {
-            'description': "Dummy variable tied with death_age_2 and death_party_2, which all have non-missing values if there was a death in the district's history (based on whether treat_2 is 1). Indicates if death of candidate was unexpected or not (1 or 0), based on the cause of the death. This value is constant for all cycles coming before the first death, value switches accordingly at district-cycle of second death and thereafter, and again if other deaths are present after the second one. If a district-cycle is between two district-cycle rows that have experienced deaths, we assign the previous death's values of the variable. Otherwise, the variable will have missing values if districts are not part of the treatment (i.e., has never experienced the death of an incumbent).",
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'death_age_2': {
-            'description': "Numerical variable tied with death_unexpected_2 and death_party_2, which all have non-missing values if there was a death in the district's history (based on whether treat_2 is 1). Indicates age at which candidate passed away. This value is constant for all cycles coming before the first death, value switches accordingly at district-cycle of second death and thereafter, and again if other deaths are present after the second one. If a district-cycle is between two district-cycle rows that have experienced deaths, we assign the previous death's values of the variable. Otherwise, the variable will have missing values if districts are not part of the treatment (i.e., has never experienced the death of an incumbent).",
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'death_party_2': {
-            'description': "Categorical variable tied with death_unexpected_2 and death_age_2, which all have non-missing values if there was a death in the district's history (based on whether treat_2 is 1). Indicates party of candidate ('R' - Republican, 'D' - Democrat). This value is constant for all cycles coming before the first death, value switches accordingly at district-cycle of second death and thereafter, and again if other deaths are present after the second one. If a district-cycle is between two district-cycle rows that have experienced deaths, we assign the previous death's values of the variable. Otherwise, the variable will have missing values if districts are not part of the treatment (i.e., has never experienced the death of an incumbent).",
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'spec_member': {
-            'description': 'String variable indicating the full name of incumbent (candidate) that either resigned or passed away at that specific district-cycle. Missing values if no candidate passed away or resigned at that district-cycle.',
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'special_elections_cause': {
-            'description': "String variable indicating the cause of vacancy and, therefore, special elections (either 'Resigned' or 'Death').",
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    'special_elections': {
-            'description': 'Dummy variable indicating if special elections occurred on that district-cycle (1, yes, 0, not).',
-            'source': 'ChatGPT ; Wikipedia',
-            'origin_dataset': 'special_elections_final.csv',
-            'relevant_URLs': 'https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_7'
-            },       
-    
-    # OUTPUT_8    
-    
-    'avg_counting_hedging_corp': {
-            'description': 'Average number of candidates (in general election only, and before the special election) funded by corporations in the district/cycle',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'avg_counting_hedging_corp_dem_primary': {
-            'description': 'Average number of Democratic candidates (in primary election only, and before the special election) funded by corporations in the district/cycle',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'avg_counting_hedging_corp_rep_primary': {
-            'description': 'Average number of Republican candidates (in primary election only, and before the special election) funded by corporations in the district/cycle',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'hedging_money_general_corp': {
-            'description': 'The index of extensive-margin hedging is computed as the absolute difference between a corporation’s contributions to Republican and Democratic candidates in a given district and election cycle (only for general election, before the special election). This captures the extent to which a firm biases its contributions toward one party over the other. The index is constructed taking the average of this difference across corporations in the same district and cycle. ',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'hedging_money_dem_primary_corp': {
-            'description': "Similar to hedging_money_general, but look at corporate contributions going to Democratic primaries.",
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'hedging_money_rep_primary_corp': {
-            'description': "Similar to hedging_money_general, but look at corporate contributions going to Republican primaries.",
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    
-    'avg_counting_hedging_ind': {
-            'description': 'Average number of candidates (in general election only, and before the special election) funded by individuals in the district/cycle',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'avg_counting_hedging_ind_dem_primary': {
-            'description': 'Average number of Democratic candidates (in primary election only, and before the special election) funded by individuals in the district/cycle',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'avg_counting_hedging_ind_rep_primary': {
-            'description': 'Average number of Republican candidates (in primary election only, and before the special election) funded by individuals in the district/cycle',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'hedging_money_general_ind': {
-            'description': 'Same as hedging_money_general_corp, but for contributions coming from inidviduals.',
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'hedging_money_dem_primary_ind': {
-            'description': "Similar to hedging_money_general_ind, but look at individual contributions going to Democratic primaries.",
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },       
-    
-    'hedging_money_rep_primary_ind': {
-            'description': "Similar to hedging_money_general, but look at individual contributions going to Republican primaries.",
-            'source': 'DIME data ; ChatGPT ; Wikipedia',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv ; special_elections_final.csv, election_dates.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime ; https://en.wikipedia.org/wiki/List_of_special_elections_to_the_United_States_House_of_Representatives',
-            'output_relation': 'OUTPUT_8'
-            },           
-    
-    # OUTPUT_9
-    'cfscore_mean_prim_dem': {
-            'description': 'Average CFscore of candidates in the Democratic primary (computed using recipient.cfscores.dyn, and recipient.cfscores when former not available)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },       
-    
-    'cfscore_mean_prim_rep': {
-            'description': 'Average CFscore of candidates in the Republican primary (computed using recipient.cfscores.dyn, and recipient.cfscores when former not available)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },       
-    
-    'cfscore_prim_abs_diff': {
-            'description': 'Absolute value of difference between cfscore_mean_prim_dem and cfscore_mean_prim_rep, capturing the difference in ideology between the two parties in the primaries in the district-cycle.',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },       
-    
-    'cfscore_gen_dem': {
-            'description': 'CFscore of Democratic candidate in general',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },       
-    
-    'cfscore_gen_rep': {
-            'description': 'CFscore of Republican candidate in general',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },       
-    
-    'cfscore_gen_abs_diff': {
-            'description': 'Absolute value of difference between cfscore_mean_prim_dem and cfscore_mean_prim_rep, capturing the difference in ideology between the two parties in the general election in the district-cycle.',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },       
-    
-    'cfscore_mean_contrib': {
-            'description': 'Average CFscore of all contributors (inidividual and corporate)',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },       
-    
-    'cfscore_mean_contrib_dem': {
-            'description': 'Average CFscore of all contributors (inidividual and corporate) donating to Democrats',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },       
-    
-    'cfscore_mean_contrib_rep': {
-            'description': 'Average CFscore of all contributors (inidividual and corporate) donating to Republicans',
-            'source': 'DIME data',
-            'origin_dataset': 'contribDB_1980.csv to contribDB_2024.csv ; dime_recipients_1979_2024.csv',
-            'relevant_URLs': 'https://data.stanford.edu/dime',
-            'output_relation': 'OUTPUT_9'
-            },           
-    
-    }
-
-
-# Create a dictionary with each variable having four attributes
-rows = []
-for var_name, attributes in OUTPUT_1_final_collapsed_dict.items():
-    rows.append({
-        'variable_name': var_name,
-        'description': attributes['description'],
-        'source': attributes['source'],
-        'origin_dataset': attributes['origin_dataset'],
-        'relevant_URLs': attributes['relevant_URLs'],
-        'output_relation': attributes['output_relation'],
-    })
-
-OUTPUT_1_final_collapsed_dict_df = pd.DataFrame(rows)
-
-
+print("\nFinal step: Saving collapsed OUTPUTS...")
 OUTPUT_1_final_collapsed.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_1_final_collapsed.csv"), index = False)
 OUTPUT_1_final_collapsed_dict_df.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_1_final_collapsed_dict.csv"), index = False)
 
-
+OUTPUT_1_final_collapsed_ext.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_1_final_collapsed_ext.csv"), index = False)
+OUTPUT_1_final_collapsed_ext_dict_df.to_csv(os.path.join(data_folder, "OUTPUTS", "OUTPUT_1_final_collapsed_dict_ext.csv"), index = False)
 
 ### END OF SCRIPT!
 
 print("\nEnd of script!")
 
 
+# OUTPUT_1_final_collapsed = pd.read_csv(
+#     data_folder + "/OUTPUTS/OUTPUT_1_final_collapsed.csv", 
+#     encoding='latin-1'
+#     )
+
+
+# OUTPUT_1_final_collapsed_dup = OUTPUT_1_final_collapsed.duplicated(subset=['district', 'cycle'])
+
+# OUTPUT_1_final_collapsed_dup = OUTPUT_1_final_collapsed.groupby(['district', 'cycle']).size()
+# OUTPUT_1_final_collapsed_dup[OUTPUT_1_final_collapsed_dup > 1]
+
+# "LA06 2002"

@@ -34,7 +34,7 @@ from datetime import datetime
 
 # If all fails define working folder manually and run the lines here:
 code_folder = r"C:\Users\lhoxhaj\OneDrive - Imperial College London\Desktop\RA\Tommaso\Contributions_Paper\working_folder_lir\code"
-code_folder = "/Users/lirhoxhaj/Library/CloudStorage/OneDrive-ImperialCollegeLondon/Desktop/RA/Tommaso/Contributions_Paper/working_folder_lir/code"
+# code_folder = "/Users/lirhoxhaj/Library/CloudStorage/OneDrive-ImperialCollegeLondon/Desktop/RA/Tommaso/Contributions_Paper/working_folder_lir/code"
 
 # This is your working folder where folders '\code' and '\data' are saved
 parent_folder = os.path.dirname(code_folder)
@@ -112,6 +112,45 @@ def extract_districts_with_years(html_file):
                             "created_after_1980": created_after_1980
                         })
     
+    # Add territorial districts manually (source: https://en.wikipedia.org/wiki/List_of_United_States_congressional_districts#Non-voting_delegations)
+    territorial_data = {
+        "AS01": ("American Samoa", "1978–present", "American Samoa At-large district (1978–present)"),
+        "DC01": ("District of Columbia", "1871–1875, 1971–present", "District of Columbia At-large district (1871–1875, 1971–present)"),
+        "GU01": ("Guam", "1970–present", "Guam At-large district (1970–present)"),
+        "MP01": ("Northern Mariana Islands", "2009–present", "Northern Mariana Islands At-large district (2009–present)"),
+        "PR01": ("Puerto Rico", "1901–present", "Puerto Rico At-large district (1901–present)"),
+        "VI01": ("United States Virgin Islands", "1970–present", "U.S. Virgin Islands At-large district (1970–present)")
+    }
+    
+    for district_code, (state, years, full_text) in territorial_data.items():
+        # Extract years and process them
+        year_matches = re.findall(r"\b(?:17|18|19|20)\d{2}\b", years)
+        years_int = list(map(int, year_matches)) if year_matches else []
+        year_after_1980 = int(any(y > 1980 for y in years_int)) if years_int else 0
+        
+        # Check if discontinued
+        discontinued_after_1980 = 0
+        if "present" not in years.lower() and year_after_1980 and len(years_int) >= 2:
+            if years_int[-1] > 1980 and years_int[-2] > 1980:
+                discontinued_after_1980 = "Special case"
+            elif years_int[-1] > 1980 and years_int[-2] <= 1980:
+                discontinued_after_1980 = 1
+        
+        # Check if created after 1980
+        created_after_1980 = 0
+        if year_after_1980 and discontinued_after_1980 == 0:
+            created_after_1980 = 1
+        
+        data.append({
+            "state": state,
+            "district": "At-large",  # Will be converted to district code later
+            "years": years.replace("–", ", ").replace(", present", ""),  # Format consistently
+            "full_text": full_text,
+            "year_after_1980": year_after_1980,
+            "discontinued_after_1980": discontinued_after_1980,
+            "created_after_1980": created_after_1980
+        })
+    
     # Error display
     if not data:
         print("Warning: No district data found in HTML.")
@@ -120,7 +159,7 @@ def extract_districts_with_years(html_file):
     return pd.DataFrame(data)
 
 
-# Note: HTML file was copied by source of Wiki page here: https://en.wikipedia.org/wiki/List_of_United_States_congressional_districts
+# Call the function
 html_file = os.path.join(data_folder, "new_districts.html")
 df = extract_districts_with_years(html_file)
 
@@ -145,14 +184,17 @@ print(df[df['created_after_1980'] == 1]['created_after_1980'].value_counts())
 us_states = {
     "Alabama": "AL",
     "Alaska": "AK",
+    "American Samoa": "AS",               # territorial
     "Arizona": "AZ",
     "Arkansas": "AR",
     "California": "CA",
     "Colorado": "CO",
     "Connecticut": "CT",
+    "District of Columbia": "DC",         # territorial
     "Delaware": "DE",
     "Florida": "FL",
     "Georgia": "GA",
+    "Guam": "GU",                         # territorial
     "Hawaii": "HI",
     "Idaho": "ID",
     "Illinois": "IL",
@@ -168,6 +210,7 @@ us_states = {
     "Minnesota": "MN",
     "Mississippi": "MS",
     "Missouri": "MO",
+    "Northern Mariana Islands": "MP",     # territorial
     "Montana": "MT",
     "Nebraska": "NE",
     "Nevada": "NV",
@@ -181,6 +224,7 @@ us_states = {
     "Oklahoma": "OK",
     "Oregon": "OR",
     "Pennsylvania": "PA",
+    "Puerto Rico": "PR",                  # territorial
     "Rhode Island": "RI",
     "South Carolina": "SC",
     "South Dakota": "SD",
@@ -189,6 +233,7 @@ us_states = {
     "Utah": "UT",
     "Vermont": "VT",
     "Virginia": "VA",
+    "United States Virgin Islands": "VI", # territorial
     "Washington": "WA",
     "West Virginia": "WV",
     "Wisconsin": "WI",
@@ -244,6 +289,7 @@ df['district'] = df['code'] + df['district_number'].astype(str)
 #       For the sake of our research, we retain only the year when the district became 'obsolete' per the Wikipedia description, meaning no more elections were held.
 df['obsolete'] = df['full_text'].str.contains('obsolete', case=False).astype(int)
 df.loc[df['obsolete'] == 1, 'obsolete_year'] = df.loc[df['obsolete'] == 1, 'full_text'].str.extract(r'\(.*?(\d{4}).*?\)', expand=False)
+df['obsolete_year'] = pd.to_numeric(df['obsolete_year'], errors='coerce')
 
 df.to_csv(os.path.join(data_folder, "new_districts.csv"), index = False)
 
@@ -257,6 +303,8 @@ df_2 = df[df['year_after_1980'] == 1][
 
 df_2['discontinued_year'] = np.nan
 df_2['created_year'] = np.nan
+
+
 for idx in df_2.index:
     # Condition for discountinued districts
     if df_2.loc[idx, 'discontinued_after_1980'] == 1:
@@ -273,19 +321,18 @@ for idx in df_2.index:
                     df_2.loc[idx, 'discontinued_year'] = last_year
     # Dealing with special cases
     elif df_2.loc[idx, 'discontinued_after_1980'] == 'Special case':
-        # Repeating same logic for obsolete
-        if not pd.isna(df_2.loc[idx, 'obsolete_year']):
-            df_2.loc[idx, 'discontinued_year'] = df_2.loc[idx, 'obsolete_year']
-        else:
-            years_value = df_2.loc[idx, 'years']
-            if isinstance(years_value, str):
-                years_list = [year.strip() for year in years_value.split(',')]
-                if years_list:  # Check if the list is not empty
-                    last_year = years_list[-1]
-                    year_prior_last_year = years_list[-2]
+        years_value = df_2.loc[idx, 'years']
+        if isinstance(years_value, str):
+            years_list = [year.strip() for year in years_value.split(',')]
+            if len(years_list) >= 2:
+                last_year = years_list[-1]
+                year_prior_last_year = years_list[-2]
+                # Check if we should use obsolete year
+                if not pd.isna(df_2.loc[idx, 'obsolete_year']):
+                    df_2.loc[idx, 'discontinued_year'] = df_2.loc[idx, 'obsolete_year']
+                else:
                     df_2.loc[idx, 'discontinued_year'] = last_year
-                    df_2.loc[idx, 'created_year'] = year_prior_last_year
-    # Condition for created districts
+                df_2.loc[idx, 'created_year'] = year_prior_last_year    # Condition for created districts
     elif df_2.loc[idx, 'created_after_1980'] == 1:
         years_value = df_2.loc[idx, 'years']
         if isinstance(years_value, str):
@@ -306,21 +353,78 @@ df_2['created_year'] = df_2['created_year'] - 1
 # There are some districts that have changed between at-large and 01 after 1980, this is recorded as having two 01 in the data (e.g. MT01)
 duplicate_districts = df_2[(df_2.duplicated(subset=['district'], keep=False)) & 
                            (df_2['full_text'].str.contains('present', case=False))]['district'].unique()
-rows_to_drop = df_2['district'].isin(duplicate_districts) 
+rows_to_drop = df_2[df_2['district'].isin(duplicate_districts)] 
+print(rows_to_drop['district'].unique())
+# ['MT01' 'NV01' 'SD01']   # these are added to df_2
+
+# Drop duplicates
+# df_2 = df_2.drop_duplicates(subset=['district'], keep='first')
+df_2 = df_2[~df_2['district'].isin(rows_to_drop['district'].unique())]
+
+df_2 = df_2[df_2['district'] != 'MT02'] # also needs to be dropped, special case
+
+# These rows have existed throughout entirety of period 1980 - 2024
+# -> MT01
+# -> MT02
+# -> NV01
+# -> SD01
+
+df_2 = df_2[['district', 'created_year', 'discontinued_year']]
+
+#%%
+## Other districts that don't require this
+
+df_3 = df[df['year_after_1980'] == 0][
+    ['district', 'years', 'full_text', 'year_after_1980','discontinued_after_1980', 'created_after_1980', 'at-large_dummy', 'obsolete_year']
+    ]
+
+df_3['discontinued_year'] = pd.to_numeric(df_2['discontinued_year'], errors='coerce')
+df_3['created_year'] = pd.to_numeric(df_2['created_year'], errors='coerce')
+
+
+# Condition for discontinued districts (dropping rows that have obsolete year)
+print(df_3['obsolete_year'].value_counts())
+print(len(df_3[df_3['obsolete_year'].notna()]))
+print(df_3[df_3['obsolete_year'] >= 1980]['district']) # should be empty !!
+
+df_3 = df_3[df_3['obsolete_year'].isna()]
+
+# There are some districts that have changed between at-large and 01 after 1980, this is recorded as having two 01 in the data (e.g. MT01)
+# duplicate_districts = df_3[(df_3.duplicated(subset=['district'], keep=False)) & 
+#                             (df_3['full_text'].str.contains('present', case=False))]['district'].unique()
+
+# rows_to_drop = df_3['district'].isin(duplicate_districts) 
 # Drop the identified rows
-df_2 = df_2[~rows_to_drop]
+df_3 = df_3.drop_duplicates(subset=['district'], keep='first')
+
+
+df_3 = df_3[['district', 'created_year', 'discontinued_year']]
+
+# Add three additional rows
+additional_rows = pd.DataFrame({
+    'district': ['MT01', 'NV01', 'SD01', 'MT02'],   # MT02 WILL BE FIXED IN OUTPUTS.PY (special case when created discontinued and created in 1980 - 2024 time period)
+    'created_year': [np.nan, np.nan, np.nan, np.nan],
+    'discontinued_year': [np.nan, np.nan, np.nan, np.nan],
+    # 'exist_always': [1, 1, 1]
+})
+
+df_3 = pd.concat([df_3, additional_rows], ignore_index=True)
+
+df_3['exist_always'] = 1
+
+print(df_3[df_3['district'].isin(['MT01', 'NV01', 'SD01', 'MT02'])])
 
 
 #%%
 
 # Saving data
-df_2 = df_2[['district', 'created_year', 'discontinued_year']]
-df_2.to_csv(os.path.join(data_folder, "new_districts_filtered.csv"), index = False)
+# df_2.to_csv(os.path.join(data_folder, "new_districts_filtered.csv"), index = False)
 
+# df_3.to_csv(os.path.join(data_folder, "new_districts_filtered_always.csv"), index = False)
 
+df_both = pd.concat([df_2, df_3], axis=0, ignore_index=True)
+df_both = df_both.sort_values(by = 'district')
+df_both['exist_always'] = df_both['exist_always'].fillna(0)
 
-
-
-
-
+df_both.to_csv(os.path.join(data_folder, "new_districts_filtered_all.csv"), index = False)
 

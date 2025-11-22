@@ -1,0 +1,659 @@
+state,district,years,full_text,year_after_1980,discontinued_after_1980,created_after_1980,code,district_number,at-large_dummy,obsolete,obsolete_year
+Alabama,AL01,"1819, 1823, 1841, 1843, 1873, 1877, 1913, 1917, 1963, 1965","At-large: 1819–1823, 1841–1843, 1873–1877, 1913–1917, 1963–1965 (obsolete)",0,0,0,AL,01,1,1,
+Alabama,AL01,"1823, 1841, 1843, 1963, 1965","1st district: 1823–1841, 1843–1963, 1965–present",0,0,0,AL,01,0,0,
+Alabama,AL02,"1823, 1841, 1843, 1963, 1965","2nd district: 1823–1841, 1843–1963, 1965–present",0,0,0,AL,02,0,0,
+Alabama,AL03,"1823, 1841, 1843, 1963, 1965","3rd district: 1823–1841, 1843–1963, 1965–present",0,0,0,AL,03,0,0,
+Alabama,AL04,"1833, 1841, 1843, 1963, 1965","4th district: 1833–1841, 1843–1963, 1965–present",0,0,0,AL,04,0,0,
+Alabama,AL05,"1833, 1841, 1843, 1963, 1965","5th district: 1833–1841, 1843–1963, 1965–present",0,0,0,AL,05,0,0,
+Alabama,AL06,"1843, 1963, 1965","6th district: 1843–1963, 1965–present",0,0,0,AL,06,0,0,
+Alabama,AL07,"1843, 1863, 1877, 1963, 1965","7th district: 1843–1863, 1877–1963, 1965–present",0,0,0,AL,07,0,0,
+Alabama,AL08,"1877, 1963, 1965, 1973","8th district: 1877–1963, 1965–1973 (obsolete since the1970 census)",0,0,0,AL,08,0,1,1970.0
+Alabama,AL09,"1893, 1963",9th district: 1893–1963 (obsolete since the1960 census),0,0,0,AL,09,0,1,1960.0
+Alabama,AL10,"1917, 1933",10th district: 1917–1933 (obsolete since the1930 census),0,0,0,AL,10,0,1,1930.0
+Alaska,AK01,1959,At-large: 1959–present,0,0,0,AK,01,1,0,
+Arizona,AZ01,"1912, 1949",At-large: 1912–1949 (obsolete),0,0,0,AZ,01,1,1,
+Arizona,AZ01,1949,1st district: 1949–present,0,0,0,AZ,01,0,0,
+Arizona,AZ02,1949,2nd district: 1949–present,0,0,0,AZ,02,0,0,
+Arizona,AZ03,1963,3rd district: 1963–present,0,0,0,AZ,03,0,0,
+Arizona,AZ04,1973,4th district: 1973–present,0,0,0,AZ,04,0,0,
+Arizona,AZ05,1983,5th district: 1983–present,1,0,1,AZ,05,0,0,
+Arizona,AZ06,1993,6th district: 1993–present,1,0,1,AZ,06,0,0,
+Arizona,AZ07,2003,7th district: 2003–present,1,0,1,AZ,07,0,0,
+Arizona,AZ08,2003,8th district: 2003–present,1,0,1,AZ,08,0,0,
+Arizona,AZ09,2013,9th district: 2013–present,1,0,1,AZ,09,0,0,
+Arkansas,AR01,"1836, 1853, 1873, 1875, 1883, 1885","At-large: 1836–1853, 1873–1875, 1883–1885 (obsolete)",0,0,0,AR,01,1,1,
+Arkansas,AR01,1853,1st district: 1853–present,0,0,0,AR,01,0,0,
+Arkansas,AR02,1853,2nd district: 1853–present,0,0,0,AR,02,0,0,
+Arkansas,AR03,1863,3rd district: 1863–present,0,0,0,AR,03,0,0,
+Arkansas,AR04,1875,4th district: 1875–present,0,0,0,AR,04,0,0,
+Arkansas,AR05,"1885, 1963",5th district: 1885–1963 (obsolete since the1960 census),0,0,0,AR,05,0,1,1960.0
+Arkansas,AR06,"1893, 1963",6th district: 1893–1963 (obsolete since the1960 census),0,0,0,AR,06,0,1,1960.0
+Arkansas,AR07,"1903, 1953",7th district: 1903–1953 (obsolete since the1950 census),0,0,0,AR,07,0,1,1950.0
+California,CA01,"1849, 1865, 1883, 1885","At-large: 1849–1865, 1883–1885 (obsolete)",0,0,0,CA,01,1,1,
+California,CA01,1865,1st district: 1865–present,0,0,0,CA,01,0,0,
+California,CA02,1865,2nd district: 1865–present,0,0,0,CA,02,0,0,
+California,CA03,1865,3rd district: 1865–present,0,0,0,CA,03,0,0,
+California,CA04,1873,4th district: 1873–present,0,0,0,CA,04,0,0,
+California,CA05,1885,5th district: 1885–present,0,0,0,CA,05,0,0,
+California,CA06,1885,6th district: 1885–present,0,0,0,CA,06,0,0,
+California,CA07,1893,7th district: 1893–present,0,0,0,CA,07,0,0,
+California,CA08,1903,8th district: 1903–present,0,0,0,CA,08,0,0,
+California,CA09,1913,9th district: 1913–present,0,0,0,CA,09,0,0,
+California,CA10,1913,10th district: 1913–present,0,0,0,CA,10,0,0,
+California,CA11,1913,11th district: 1913–present,0,0,0,CA,11,0,0,
+California,CA12,1933,12th district: 1933–present,0,0,0,CA,12,0,0,
+California,CA13,1933,13th district: 1933–present,0,0,0,CA,13,0,0,
+California,CA14,1933,14th district: 1933–present,0,0,0,CA,14,0,0,
+California,CA15,1933,15th district: 1933–present,0,0,0,CA,15,0,0,
+California,CA16,1933,16th district: 1933–present,0,0,0,CA,16,0,0,
+California,CA17,1933,17th district: 1933–present,0,0,0,CA,17,0,0,
+California,CA18,1933,18th district: 1933–present,0,0,0,CA,18,0,0,
+California,CA19,1933,19th district: 1933–present,0,0,0,CA,19,0,0,
+California,CA20,1933,20th district: 1933–present,0,0,0,CA,20,0,0,
+California,CA21,1943,21st district: 1943–present,0,0,0,CA,21,0,0,
+California,CA22,1943,22nd district: 1943–present,0,0,0,CA,22,0,0,
+California,CA23,1943,23rd district: 1943–present,0,0,0,CA,23,0,0,
+California,CA24,1953,24th district: 1953–present,0,0,0,CA,24,0,0,
+California,CA25,1953,25th district: 1953–present,0,0,0,CA,25,0,0,
+California,CA26,1953,26th district: 1953–present,0,0,0,CA,26,0,0,
+California,CA27,1953,27th district: 1953–present,0,0,0,CA,27,0,0,
+California,CA28,1953,28th district: 1953–present,0,0,0,CA,28,0,0,
+California,CA29,1953,29th district: 1953–present,0,0,0,CA,29,0,0,
+California,CA30,1953,30th district: 1953–present,0,0,0,CA,30,0,0,
+California,CA31,1963,31st district: 1963–present,0,0,0,CA,31,0,0,
+California,CA32,1963,32nd district: 1963–present,0,0,0,CA,32,0,0,
+California,CA33,1963,33rd district: 1963–present,0,0,0,CA,33,0,0,
+California,CA34,1963,34th district: 1963–present,0,0,0,CA,34,0,0,
+California,CA35,1963,35th district: 1963–present,0,0,0,CA,35,0,0,
+California,CA36,1963,36th district: 1963–present,0,0,0,CA,36,0,0,
+California,CA37,1963,37th district: 1963–present,0,0,0,CA,37,0,0,
+California,CA38,1963,38th district: 1963–present,0,0,0,CA,38,0,0,
+California,CA39,1973,39th district: 1973–present,0,0,0,CA,39,0,0,
+California,CA40,1973,40th district: 1973–present,0,0,0,CA,40,0,0,
+California,CA41,1973,41st district: 1973–present,0,0,0,CA,41,0,0,
+California,CA42,1973,42nd district: 1973–present,0,0,0,CA,42,0,0,
+California,CA43,1973,43rd district: 1973–present,0,0,0,CA,43,0,0,
+California,CA44,1983,44th district: 1983–present,1,0,1,CA,44,0,0,
+California,CA45,1983,45th district: 1983–present,1,0,1,CA,45,0,0,
+California,CA46,1993,46th district: 1993–present,1,0,1,CA,46,0,0,
+California,CA47,1993,47th district: 1993–present,1,0,1,CA,47,0,0,
+California,CA48,1993,48th district: 1993–present,1,0,1,CA,48,0,0,
+California,CA49,1993,49th district: 1993–present,1,0,1,CA,49,0,0,
+California,CA50,1993,50th district: 1993–present,1,0,1,CA,50,0,0,
+California,CA51,1993,51st district: 1993–present,1,0,1,CA,51,0,0,
+California,CA52,1993,52nd district: 1993–present,1,0,1,CA,52,0,0,
+California,CA53,"2003, 2023",53rd district: 2003–2023 (obsolete due to the2020 census),1,Special case,0,CA,53,0,1,2020.0
+Colorado,CO01,"1876, 1893, 1903, 1915","At-large: 1876–1893, 1903–1915 (obsolete)",0,0,0,CO,01,1,1,
+Colorado,CO01,1893,1st district: 1893–present,0,0,0,CO,01,0,0,
+Colorado,CO02,1893,2nd district: 1893–present,0,0,0,CO,02,0,0,
+Colorado,CO03,1915,3rd district: 1915–present,0,0,0,CO,03,0,0,
+Colorado,CO04,1915,4th district: 1915–present,0,0,0,CO,04,0,0,
+Colorado,CO05,1973,5th district: 1973–present,0,0,0,CO,05,0,0,
+Colorado,CO06,1983,6th district: 1983–present,1,0,1,CO,06,0,0,
+Colorado,CO07,2003,7th district: 2003–present,1,0,1,CO,07,0,0,
+Colorado,CO08,2023,8th district: 2023–present,1,0,1,CO,08,0,0,
+Connecticut,CT01,"1789, 1837, 1903, 1913, 1933, 1965","At-large: 1789–1837, 1903–1913, 1933–1965 (obsolete)",0,0,0,CT,01,1,1,
+Connecticut,CT01,1837,1st district: 1837–present,0,0,0,CT,01,0,0,
+Connecticut,CT02,1837,2nd district: 1837–present,0,0,0,CT,02,0,0,
+Connecticut,CT03,1837,3rd district: 1837–present,0,0,0,CT,03,0,0,
+Connecticut,CT04,1837,4th district: 1837–present,0,0,0,CT,04,0,0,
+Connecticut,CT05,"1837, 1843, 1913","5th district: 1837–1843, 1913–present",0,0,0,CT,05,0,0,
+Connecticut,CT06,"1837, 1843, 1965, 2003","6th district: 1837–1843, 1965–2003 (obsolete since the2000 census)",1,1,0,CT,06,0,1,2000.0
+Delaware,DE01,1789,At-large: 1789–present,0,0,0,DE,01,1,0,
+Florida,FL01,"1845, 1875, 1913, 1915, 1933, 1937, 1943, 1945","At-large: 1845–1875, 1913–1915, 1933–1937, 1943–1945 (obsolete)",0,0,0,FL,01,1,1,
+Florida,FL01,1875,1st district: 1875–present,0,0,0,FL,01,0,0,
+Florida,FL02,1875,2nd district: 1875–present,0,0,0,FL,02,0,0,
+Florida,FL03,1903,3rd district: 1903–present,0,0,0,FL,03,0,0,
+Florida,FL04,1915,4th district: 1915–present,0,0,0,FL,04,0,0,
+Florida,FL05,1937,5th district: 1937–present,0,0,0,FL,05,0,0,
+Florida,FL06,1945,6th district: 1945–present,0,0,0,FL,06,0,0,
+Florida,FL07,1953,7th district: 1953–present,0,0,0,FL,07,0,0,
+Florida,FL08,1953,8th district: 1953–present,0,0,0,FL,08,0,0,
+Florida,FL09,1963,9th district: 1963–present,0,0,0,FL,09,0,0,
+Florida,FL10,1963,10th district: 1963–present,0,0,0,FL,10,0,0,
+Florida,FL11,1963,11th district: 1963–present,0,0,0,FL,11,0,0,
+Florida,FL12,1963,12th district: 1963–present,0,0,0,FL,12,0,0,
+Florida,FL13,1973,13th district: 1973–present,0,0,0,FL,13,0,0,
+Florida,FL14,1973,14th district: 1973–present,0,0,0,FL,14,0,0,
+Florida,FL15,1973,15th district: 1973–present,0,0,0,FL,15,0,0,
+Florida,FL16,1983,16th district: 1983–present,1,0,1,FL,16,0,0,
+Florida,FL17,1983,17th district: 1983–present,1,0,1,FL,17,0,0,
+Florida,FL18,1983,18th district: 1983–present,1,0,1,FL,18,0,0,
+Florida,FL19,1983,19th district: 1983–present,1,0,1,FL,19,0,0,
+Florida,FL20,1993,20th district: 1993–present,1,0,1,FL,20,0,0,
+Florida,FL21,1993,21st district: 1993–present,1,0,1,FL,21,0,0,
+Florida,FL22,1993,22nd district: 1993–present,1,0,1,FL,22,0,0,
+Florida,FL23,1993,23rd district: 1993–present,1,0,1,FL,23,0,0,
+Florida,FL24,2003,24th district: 2003–present,1,0,1,FL,24,0,0,
+Florida,FL25,2003,25th district: 2003–present,1,0,1,FL,25,0,0,
+Florida,FL26,2013,26th district: 2013–present,1,0,1,FL,26,0,0,
+Florida,FL27,2013,27th district: 2013–present,1,0,1,FL,27,0,0,
+Florida,FL28,2023,28th district: 2023–present,1,0,1,FL,28,0,0,
+Georgia,GA01,"1793, 1827, 1829, 1845, 1883, 1885","At-large: 1793–1827, 1829–1845, 1883–1885 (obsolete)",0,0,0,GA,01,1,1,
+Georgia,GA01,"1789, 1793, 1827, 1829, 1845","1st district: 1789–1793, 1827–1829, 1845–present",0,0,0,GA,01,0,0,
+Georgia,GA02,"1789, 1793, 1827, 1829, 1845","2nd district: 1789–1793, 1827–1829, 1845–present",0,0,0,GA,02,0,0,
+Georgia,GA03,"1789, 1793, 1827, 1829, 1845","3rd district: 1789–1793, 1827–1829, 1845–present",0,0,0,GA,03,0,0,
+Georgia,GA04,"1827, 1829, 1845","4th district: 1827–1829, 1845–present",0,0,0,GA,04,0,0,
+Georgia,GA05,"1827, 1829, 1845","5th district: 1827–1829, 1845–present",0,0,0,GA,05,0,0,
+Georgia,GA06,"1827, 1829, 1845","6th district: 1827–1829, 1845–present",0,0,0,GA,06,0,0,
+Georgia,GA07,"1827, 1829, 1845","7th district: 1827–1829, 1845–present",0,0,0,GA,07,0,0,
+Georgia,GA08,"1845, 1863, 1873","8th district: 1845–1863, 1873–present",0,0,0,GA,08,0,0,
+Georgia,GA09,1873,9th district: 1873–present,0,0,0,GA,09,0,0,
+Georgia,GA10,1885,10th district: 1885–present,0,0,0,GA,10,0,0,
+Georgia,GA11,"1893, 1933, 1993","11th district: 1893–1933, 1993–present",1,0,1,GA,11,0,0,
+Georgia,GA12,"1913, 1933, 2003","12th district: 1913–1933, 2003–present",1,0,1,GA,12,0,0,
+Georgia,GA13,2003,13th district: 2003–present,1,0,1,GA,13,0,0,
+Georgia,GA14,2013,14th district: 2013–present,1,0,1,GA,14,0,0,
+Hawaii,HI01,"1959, 1971",At-large: 1959–1971 (obsolete),0,0,0,HI,01,1,1,
+Hawaii,HI01,1971,1st district: 1971–present,0,0,0,HI,01,0,0,
+Hawaii,HI02,1971,2nd district: 1971–present,0,0,0,HI,02,0,0,
+Idaho,ID01,"1890, 1919",At-large: 1890–1919 (obsolete),0,0,0,ID,01,1,1,
+Idaho,ID01,1919,1st district: 1919–present,0,0,0,ID,01,0,0,
+Idaho,ID02,1919,2nd district: 1919–present,0,0,0,ID,02,0,0,
+Illinois,IL01,"1818, 1833, 1863, 1873, 1893, 1895, 1913, 1949","At-large: 1818–1833, 1863–1873, 1893–1895, 1913–1949 (obsolete)",0,0,0,IL,01,1,1,
+Illinois,IL01,1833,1st district: 1833–present,0,0,0,IL,01,0,0,
+Illinois,IL02,1833,2nd district: 1833–present,0,0,0,IL,02,0,0,
+Illinois,IL03,1833,3rd district: 1833–present,0,0,0,IL,03,0,0,
+Illinois,IL04,1843,4th district: 1843–present,0,0,0,IL,04,0,0,
+Illinois,IL05,1843,5th district: 1843–present,0,0,0,IL,05,0,0,
+Illinois,IL06,1843,6th district: 1843–present,0,0,0,IL,06,0,0,
+Illinois,IL07,1843,7th district: 1843–present,0,0,0,IL,07,0,0,
+Illinois,IL08,1853,8th district: 1853–present,0,0,0,IL,08,0,0,
+Illinois,IL09,1853,9th district: 1853–present,0,0,0,IL,09,0,0,
+Illinois,IL10,1863,10th district: 1863–present,0,0,0,IL,10,0,0,
+Illinois,IL11,1863,11th district: 1863–present,0,0,0,IL,11,0,0,
+Illinois,IL12,1863,12th district: 1863–present,0,0,0,IL,12,0,0,
+Illinois,IL13,1863,13th district: 1863–present,0,0,0,IL,13,0,0,
+Illinois,IL14,1873,14th district: 1873–present,0,0,0,IL,14,0,0,
+Illinois,IL15,1873,15th district: 1873–present,0,0,0,IL,15,0,0,
+Illinois,IL16,1873,16th district: 1873–present,0,0,0,IL,16,0,0,
+Illinois,IL17,1873,17th district: 1873–present,0,0,0,IL,17,0,0,
+Illinois,IL18,"1873, 2023",18th district: 1873–2023 (obsolete due to the2020 census),1,1,0,IL,18,0,1,2020.0
+Illinois,IL19,"1873, 2013",19th district: 1873–2013 (obsolete since the2010 census),1,1,0,IL,19,0,1,2010.0
+Illinois,IL20,"1883, 2003",20th district: 1883–2003 (obsolete since the2000 census),1,1,0,IL,20,0,1,2000.0
+Illinois,IL21,"1895, 1993",21st district: 1895–1993 (obsolete since the1990 census),1,1,0,IL,21,0,1,1990.0
+Illinois,IL22,"1895, 1993",22nd district: 1895–1993 (obsolete since the1990 census),1,1,0,IL,22,0,1,1990.0
+Illinois,IL23,"1903, 1983",23rd district: 1903–1983 (obsolete since the1980 census),1,1,0,IL,23,0,1,1980.0
+Illinois,IL24,"1903, 1983",24th district: 1903–1983 (obsolete since the1980 census),1,1,0,IL,24,0,1,1980.0
+Illinois,IL25,"1903, 1963",25th district: 1903–1963 (obsolete since the1960 census),0,0,0,IL,25,0,1,1960.0
+Illinois,IL26,"1949, 1953",26th district: 1949–1953 (obsolete since the1950 census),0,0,0,IL,26,0,1,1950.0
+Indiana,IN01,"1816, 1823, 1873, 1875","At-large: 1816–1823, 1873–1875 (obsolete)",0,0,0,IN,01,1,1,
+Indiana,IN01,1823,1st district: 1823–present,0,0,0,IN,01,0,0,
+Indiana,IN02,1823,2nd district: 1823–present,0,0,0,IN,02,0,0,
+Indiana,IN03,1823,3rd district: 1823–present,0,0,0,IN,03,0,0,
+Indiana,IN04,1833,4th district: 1833–present,0,0,0,IN,04,0,0,
+Indiana,IN05,1833,5th district: 1833–present,0,0,0,IN,05,0,0,
+Indiana,IN06,1833,6th district: 1833–present,0,0,0,IN,06,0,0,
+Indiana,IN07,1833,7th district: 1833–present,0,0,0,IN,07,0,0,
+Indiana,IN08,1843,8th district: 1843–present,0,0,0,IN,08,0,0,
+Indiana,IN09,1843,9th district: 1843–present,0,0,0,IN,09,0,0,
+Indiana,IN10,"1843, 2003",10th district: 1843–2003 (obsolete since the2000 census),1,1,0,IN,10,0,1,2000.0
+Indiana,IN11,"1853, 1983",11th district: 1853–1983 (obsolete since the1980 census),1,1,0,IN,11,0,1,1980.0
+Indiana,IN12,"1875, 1943",12th district: 1875–1943 (obsolete since the1940 census),0,0,0,IN,12,0,1,1940.0
+Indiana,IN13,"1875, 1933",13th district: 1875–1933 (obsolete since the1930 census),0,0,0,IN,13,0,1,1930.0
+Iowa,IA01,"1846, 1847",At-large: 1846–1847 (obsolete),0,0,0,IA,01,1,1,
+Iowa,IA01,1847,1st district: 1847–present,0,0,0,IA,01,0,0,
+Iowa,IA02,1847,2nd district: 1847–present,0,0,0,IA,02,0,0,
+Iowa,IA03,1863,3rd district: 1863–present,0,0,0,IA,03,0,0,
+Iowa,IA04,1863,4th district: 1863–present,0,0,0,IA,04,0,0,
+Iowa,IA05,"1863, 2013",5th district: 1863–2013 (obsolete since the2010 census),1,1,0,IA,05,0,1,2010.0
+Iowa,IA06,"1863, 1993",6th district: 1863–1993 (obsolete since the1990 census),1,1,0,IA,06,0,1,1990.0
+Iowa,IA07,"1873, 1973",7th district: 1873–1973 (obsolete since the1970 census),0,0,0,IA,07,0,1,1970.0
+Iowa,IA08,"1873, 1963",8th district: 1873–1963 (obsolete since the1960 census),0,0,0,IA,08,0,1,1960.0
+Iowa,IA09,"1873, 1943",9th district: 1873–1943 (obsolete since the1940 census),0,0,0,IA,09,0,1,1940.0
+Iowa,IA10,"1883, 1933",10th district: 1883–1933 (obsolete since the1930 census),0,0,0,IA,10,0,1,1930.0
+Iowa,IA11,"1883, 1933",11th district: 1883–1933 (obsolete since the1930 census),0,0,0,IA,11,0,1,1930.0
+Kansas,KS01,"1861, 1875, 1883, 1885, 1893, 1907","At-large: 1861–1875, 1883–1885, 1893–1907 (obsolete)",0,0,0,KS,01,1,1,
+Kansas,KS01,1875,1st district: 1875–present,0,0,0,KS,01,0,0,
+Kansas,KS02,1875,2nd district: 1875–present,0,0,0,KS,02,0,0,
+Kansas,KS03,1875,3rd district: 1875–present,0,0,0,KS,03,0,0,
+Kansas,KS04,1885,4th district: 1885–present,0,0,0,KS,04,0,0,
+Kansas,KS05,"1885, 1993",5th district: 1885–1993 (obsolete since the1990 census),1,1,0,KS,05,0,1,1990.0
+Kansas,KS06,"1885, 1963",6th district: 1885–1963 (obsolete since the1960 census),0,0,0,KS,06,0,1,1960.0
+Kansas,KS07,"1885, 1943",7th district: 1885–1943 (obsolete since the1940 census),0,0,0,KS,07,0,1,1940.0
+Kansas,KS08,"1907, 1933",8th district: 1907–1933 (obsolete since the1930 census),0,0,0,KS,08,0,1,1930.0
+Kentucky,KY01,"1933, 1935",At-large: 1933–1935 (obsolete),0,0,0,KY,01,1,1,
+Kentucky,KY01,"1792, 1933, 1935","1st district: 1792–1933, 1935–present",0,0,0,KY,01,0,0,
+Kentucky,KY02,"1792, 1933, 1935","2nd district: 1792–1933, 1935–present",0,0,0,KY,02,0,0,
+Kentucky,KY03,"1803, 1933, 1935","3rd district: 1803–1933, 1935–present",0,0,0,KY,03,0,0,
+Kentucky,KY04,"1803, 1933, 1935","4th district: 1803–1933, 1935–present",0,0,0,KY,04,0,0,
+Kentucky,KY05,"1803, 1933, 1935","5th district: 1803–1933, 1935–present",0,0,0,KY,05,0,0,
+Kentucky,KY06,"1803, 1933, 1935","6th district: 1803–1933, 1935–present",0,0,0,KY,06,0,0,
+Kentucky,KY07,"1813, 1933, 1935, 1993","7th district: 1813–1933, 1935–1993 (obsolete since the1990 census)",1,1,0,KY,07,0,1,1990.0
+Kentucky,KY08,"1813, 1933, 1935, 1963","8th district: 1813–1933, 1935–1963 (obsolete since the1960 census)",0,0,0,KY,08,0,1,1960.0
+Kentucky,KY09,"1813, 1933, 1935, 1953","9th district: 1813–1933, 1935–1953 (obsolete since the1950 census)",0,0,0,KY,09,0,1,1950.0
+Kentucky,KY10,"1813, 1863, 1873, 1933","10th district: 1813–1863, 1873–1933 (obsolete since the1930 census)",0,0,0,KY,10,0,1,1930.0
+Kentucky,KY11,"1823, 1843, 1883, 1933","11th district: 1823–1843, 1883–1933 (obsolete since the1930 census)",0,0,0,KY,11,0,1,1930.0
+Kentucky,KY12,"1823, 1843",12th district: 1823–1843 (obsolete since the1840 census),0,0,0,KY,12,0,1,1840.0
+Kentucky,KY13,"1833, 1843",13th district: 1833–1843 (obsolete since the1840 census),0,0,0,KY,13,0,1,1840.0
+Louisiana,LA01,"1812, 1823, 1873, 1875","At-large: 1812–1823, 1873–1875 (obsolete)",0,0,0,LA,01,1,1,
+Louisiana,LA01,1823,1st district: 1823–present,0,0,0,LA,01,0,0,
+Louisiana,LA02,1823,2nd district: 1823–present,0,0,0,LA,02,0,0,
+Louisiana,LA03,1823,3rd district: 1823–present,0,0,0,LA,03,0,0,
+Louisiana,LA04,1843,4th district: 1843–present,0,0,0,LA,04,0,0,
+Louisiana,LA05,1863,5th district: 1863–present,0,0,0,LA,05,0,0,
+Louisiana,LA06,1875,6th district: 1875–present,0,0,0,LA,06,0,0,
+Louisiana,LA07,"1903, 2013",7th district: 1903–2013 (obsolete since the2010 census),1,1,0,LA,07,0,1,2010.0
+Louisiana,LA08,"1913, 1993",8th district: 1913–1993 (obsolete since the1990 census),1,1,0,LA,08,0,1,1990.0
+Maine,ME01,"1820, 1821, 1883, 1885","At-large: 1820–1821, 1883–1885 (obsolete)",0,0,0,ME,01,1,1,
+Maine,ME01,"1821, 1883, 1885","1st district: 1821–1883, 1885–present",0,0,0,ME,01,0,0,
+Maine,ME02,"1821, 1883, 1885","2nd district: 1821–1883, 1885–present",0,0,0,ME,02,0,0,
+Maine,ME03,"1821, 1883, 1885, 1963","3rd district: 1821–1883, 1885–1963 (obsolete since the1960 census)",0,0,0,ME,03,0,1,1960.0
+Maine,ME04,"1821, 1883, 1885, 1933","4th district: 1821–1883, 1885–1933 (obsolete since the1930 census)",0,0,0,ME,04,0,1,1930.0
+Maine,ME05,"1821, 1883",5th district: 1821–1883 (obsolete since the1880 census),0,0,0,ME,05,0,1,1880.0
+Maine,ME06,"1821, 1863",6th district: 1821–1863 (obsolete since the1860 census),0,0,0,ME,06,0,1,1860.0
+Maine,ME07,"1821, 1853",7th district: 1821–1853 (obsolete since the1850 census),0,0,0,ME,07,0,1,1850.0
+Maine,ME08,"1833, 1843",8th district: 1833–1843 (obsolete since the1840 census),0,0,0,ME,08,0,1,1840.0
+Maryland,MD01,"1963, 1967",At-large: 1963–1967 (obsolete),0,0,0,MD,01,1,1,
+Maryland,MD01,1789,1st district: 1789–present,0,0,0,MD,01,0,0,
+Maryland,MD02,1789,2nd district: 1789–present,0,0,0,MD,02,0,0,
+Maryland,MD03,1789,3rd district: 1789–present,0,0,0,MD,03,0,0,
+Maryland,MD04,1789,4th district: 1789–present,0,0,0,MD,04,0,0,
+Maryland,MD05,1789,5th district: 1789–present,0,0,0,MD,05,0,0,
+Maryland,MD06,"1789, 1863, 1873","6th district: 1789–1863, 1873–present",0,0,0,MD,06,0,0,
+Maryland,MD07,"1793, 1843, 1953","7th district: 1793–1843, 1953–present",0,0,0,MD,07,0,0,
+Maryland,MD08,"1793, 1835, 1967","8th district: 1793–1835, 1967–present",0,0,0,MD,08,0,0,
+Massachusetts,MA01,"1793, 1795",At-large: 1793–1795 (obsolete),0,0,0,MA,01,1,1,
+Massachusetts,MA01,1789,1st district: 1789–present,0,0,0,MA,01,0,0,
+Massachusetts,MA02,1789,2nd district: 1789–present,0,0,0,MA,02,0,0,
+Massachusetts,MA03,1789,3rd district: 1789–present,0,0,0,MA,03,0,0,
+Massachusetts,MA04,1789,4th district: 1789–present,0,0,0,MA,04,0,0,
+Massachusetts,MA05,"1789, 1793, 1795","5th district: 1789–1793, 1795–present",0,0,0,MA,05,0,0,
+Massachusetts,MA06,"1789, 1793, 1795","6th district: 1789–1793, 1795–present",0,0,0,MA,06,0,0,
+Massachusetts,MA07,"1789, 1793, 1795","7th district: 1789–1793, 1795–present",0,0,0,MA,07,0,0,
+Massachusetts,MA08,"1789, 1793, 1795","8th district: 1789–1793, 1795–present",0,0,0,MA,08,0,0,
+Massachusetts,MA09,1795,9th district: 1795–present,0,0,0,MA,09,0,0,
+Massachusetts,MA10,"1795, 2013",10th district: 1795–2013 (obsolete since the2010 census),1,1,0,MA,10,0,1,2010.0
+Massachusetts,MA11,"1795, 1843, 1853, 1863, 1873, 1993","11th district: 1795–1843, 1853–1863, 1873–1993 (obsolete since the1990 census)",1,1,0,MA,11,0,1,1990.0
+Massachusetts,MA12,"1795, 1843, 1883, 1983","12th district: 1795–1843, 1883–1983 (obsolete since the1980 census)",1,1,0,MA,12,0,1,1980.0
+Massachusetts,MA13,"1795, 1833, 1893, 1963","13th district: 1795–1833, 1893–1963 (obsolete since the1960 census)",0,0,0,MA,13,0,1,1960.0
+Massachusetts,MA14,"1795, 1820, 1903, 1963","14th district: 1795–1820 (moved to Maine), 1903–1963 (obsolete since the1960 census)",0,0,0,MA,14,0,1,1903.0
+Massachusetts,MA15,"1803, 1820, 1913, 1943","15th district: 1803–1820 (moved to Maine), 1913–1943 (obsolete since the1940 census)",0,0,0,MA,15,0,1,1913.0
+Massachusetts,MA16,"1803, 1820, 1913, 1933","16th district: 1803–1820 (moved to Maine), 1913–1933 (obsolete since the1930 census)",0,0,0,MA,16,0,1,1913.0
+Massachusetts,MA17,"1803, 1820, 1820",17th district: 1803–1820 (obsolete since 1820 move to Maine[notes 1]),0,0,0,MA,17,0,1,1820.0
+Massachusetts,MA18,"1813, 1820, 1820",18th district: 1813–1820 (obsolete since 1820 move to Maine[notes 1]),0,0,0,MA,18,0,1,1820.0
+Massachusetts,MA19,"1813, 1820, 1820",19th district: 1813–1820 (obsolete since 1820 move to Maine[notes 1]),0,0,0,MA,19,0,1,1820.0
+Massachusetts,MA20,"1813, 1820, 1820",20th district: 1813–1820 (obsolete since 1820 move to Maine[notes 1]),0,0,0,MA,20,0,1,1820.0
+Michigan,MI01,"1837, 1843, 1913, 1915, 1963, 1965","At-large: 1837–1843, 1913–1915, 1963–1965 (obsolete)",0,0,0,MI,01,1,1,
+Michigan,MI01,1843,1st district: 1843–present,0,0,0,MI,01,0,0,
+Michigan,MI02,1843,2nd district: 1843–present,0,0,0,MI,02,0,0,
+Michigan,MI03,1843,3rd district: 1843–present,0,0,0,MI,03,0,0,
+Michigan,MI04,1853,4th district: 1853–present,0,0,0,MI,04,0,0,
+Michigan,MI05,1863,5th district: 1863–present,0,0,0,MI,05,0,0,
+Michigan,MI06,1863,6th district: 1863–present,0,0,0,MI,06,0,0,
+Michigan,MI07,1873,7th district: 1873–present,0,0,0,MI,07,0,0,
+Michigan,MI08,1873,8th district: 1873–present,0,0,0,MI,08,0,0,
+Michigan,MI09,1873,9th district: 1873–present,0,0,0,MI,09,0,0,
+Michigan,MI10,1883,10th district: 1883–present,0,0,0,MI,10,0,0,
+Michigan,MI11,1883,11th district: 1883–present,0,0,0,MI,11,0,0,
+Michigan,MI12,1893,12th district: 1893–present,0,0,0,MI,12,0,0,
+Michigan,MI13,1915,13th district: 1915–present,0,0,0,MI,13,0,0,
+Michigan,MI14,"1933, 2023",14th district: 1933–2023 (obsolete since the2020 census),1,1,0,MI,14,0,1,2020.0
+Michigan,MI15,"1933, 2013",15th district: 1933–2013 (obsolete since the2010 census),1,1,0,MI,15,0,1,2010.0
+Michigan,MI16,"1933, 2003",16th district: 1933–2003 (obsolete since the2000 census),1,1,0,MI,16,0,1,2000.0
+Michigan,MI17,"1933, 1993",17th district: 1933–1993 (obsolete since the1990 census),1,1,0,MI,17,0,1,1990.0
+Michigan,MI18,"1953, 1993",18th district: 1953–1993 (obsolete since the1990 census),1,1,0,MI,18,0,1,1990.0
+Michigan,MI19,"1965, 1983",19th district: 1965–1983 (obsolete since the1980 census),1,1,0,MI,19,0,1,1980.0
+Minnesota,MN01,"1858, 1863, 1913, 1915, 1933, 1935","At-large: 1858–1863, 1913–1915, 1933–1935 (obsolete)",0,0,0,MN,01,1,1,
+Minnesota,MN01,"1863, 1933, 1935","1st district: 1863–1933, 1935–present",0,0,0,MN,01,0,0,
+Minnesota,MN02,"1863, 1933, 1935","2nd district: 1863–1933, 1935–present",0,0,0,MN,02,0,0,
+Minnesota,MN03,"1873, 1933, 1935","3rd district: 1873–1933, 1935–present",0,0,0,MN,03,0,0,
+Minnesota,MN04,"1883, 1933, 1935","4th district: 1883–1933, 1935–present",0,0,0,MN,04,0,0,
+Minnesota,MN05,"1883, 1933, 1935","5th district: 1883–1933, 1935–present",0,0,0,MN,05,0,0,
+Minnesota,MN06,"1893, 1933, 1935","6th district: 1893–1933, 1935–present",0,0,0,MN,06,0,0,
+Minnesota,MN07,"1893, 1933, 1935","7th district: 1893–1933, 1935–present",0,0,0,MN,07,0,0,
+Minnesota,MN08,"1903, 1933, 1935","8th district: 1903–1933, 1935–present",0,0,0,MN,08,0,0,
+Minnesota,MN09,"1903, 1933, 1935, 1963","9th district: 1903–1933, 1935–1963 (obsolete since the1960 census)",0,0,0,MN,09,0,1,1960.0
+Minnesota,MN10,"1915, 1933",10th district: 1915–1933 (obsolete since the1930 census),0,0,0,MN,10,0,1,1930.0
+Mississippi,MS01,"1817, 1847, 1853, 1855","At-large: 1817–1847, 1853–1855 (obsolete)",0,0,0,MS,01,1,1,
+Mississippi,MS01,1847,1st district: 1847–present,0,0,0,MS,01,0,0,
+Mississippi,MS02,1847,2nd district: 1847–present,0,0,0,MS,02,0,0,
+Mississippi,MS03,1847,3rd district: 1847–present,0,0,0,MS,03,0,0,
+Mississippi,MS04,1847,4th district: 1847–present,0,0,0,MS,04,0,0,
+Mississippi,MS05,"1855, 2003",5th district: 1855–2003 (obsolete since the2000 census),1,1,0,MS,05,0,1,2000.0
+Mississippi,MS06,"1873, 1963",6th district: 1873–1963 (obsolete since the1960 census),0,0,0,MS,06,0,1,1960.0
+Mississippi,MS07,"1883, 1953",7th district: 1883–1953 (obsolete since the1950 census),0,0,0,MS,07,0,1,1950.0
+Mississippi,MS08,"1903, 1933",8th district: 1903–1933 (obsolete since the1930 census),0,0,0,MS,08,0,1,1930.0
+Missouri,MO01,"1821, 1847, 1933, 1935","At-large: 1821–1847, 1933–1935 (obsolete)",0,0,0,MO,01,1,1,
+Missouri,MO01,"1847, 1933, 1935","1st district: 1847–1933, 1935–present",0,0,0,MO,01,0,0,
+Missouri,MO02,"1847, 1933, 1935","2nd district: 1847–1933, 1935–present",0,0,0,MO,02,0,0,
+Missouri,MO03,"1847, 1933, 1935","3rd district: 1847–1933, 1935–present",0,0,0,MO,03,0,0,
+Missouri,MO04,"1847, 1933, 1935","4th district: 1847–1933, 1935–present",0,0,0,MO,04,0,0,
+Missouri,MO05,"1847, 1933, 1935","5th district: 1847–1933, 1935–present",0,0,0,MO,05,0,0,
+Missouri,MO06,"1853, 1933, 1935","6th district: 1853–1933, 1935–present",0,0,0,MO,06,0,0,
+Missouri,MO07,"1853, 1933, 1935","7th district: 1853–1933, 1935–present",0,0,0,MO,07,0,0,
+Missouri,MO08,"1863, 1933, 1935","8th district: 1863–1933, 1935–present",0,0,0,MO,08,0,0,
+Missouri,MO09,"1863, 1933, 1935, 2013","9th district: 1863–1933, 1935–2013 (obsolete since the2010 census)",1,1,0,MO,09,0,1,2010.0
+Missouri,MO10,"1873, 1933, 1935, 1983","10th district: 1873–1933, 1935–1983 (obsolete since the1980 census)",1,1,0,MO,10,0,1,1980.0
+Missouri,MO11,"1873, 1933, 1935, 1963","11th district: 1873–1933, 1935–1963 (obsolete since the1960 census)",0,0,0,MO,11,0,1,1960.0
+Missouri,MO12,"1873, 1933, 1935, 1953","12th district: 1873–1933, 1935–1953 (obsolete since the1950 census)",0,0,0,MO,12,0,1,1950.0
+Missouri,MO13,"1873, 1933, 1935, 1953","13th district: 1873–1933, 1935–1953 (obsolete since the1950 census)",0,0,0,MO,13,0,1,1950.0
+Missouri,MO14,"1883, 1933",14th district: 1883–1933 (obsolete since the1930 census),0,0,0,MO,14,0,1,1930.0
+Missouri,MO15,"1893, 1933",15th district: 1893–1933 (obsolete since the1930 census),0,0,0,MO,15,0,1,1930.0
+Missouri,MO16,"1903, 1933",16th district: 1903–1933 (obsolete since the1930 census),0,0,0,MO,16,0,1,1930.0
+Montana,MT01,"1889, 1919, 1993, 2023","At-large: 1889–1919, 1993–2023 (obsolete)",1,Special case,0,MT,01,1,1,
+Montana,MT01,"1919, 1993, 2023","1st district: 1919–1993, 2023–present",1,0,1,MT,01,0,0,
+Montana,MT02,"1919, 1993, 2023","2nd district: 1919–1993, 2023–present",1,0,1,MT,02,0,0,
+Nebraska,NE01,"1867, 1883",At-large: 1867–1883 (obsolete),0,0,0,NE,01,1,1,
+Nebraska,NE01,1883,1st district: 1883–present,0,0,0,NE,01,0,0,
+Nebraska,NE02,1883,2nd district: 1883–present,0,0,0,NE,02,0,0,
+Nebraska,NE03,1883,3rd district: 1883–present,0,0,0,NE,03,0,0,
+Nebraska,NE04,"1893, 1963",4th district: 1893–1963 (obsolete since the1960 census),0,0,0,NE,04,0,1,1960.0
+Nebraska,NE05,"1893, 1943",5th district: 1893–1943 (obsolete since the1940 census),0,0,0,NE,05,0,1,1940.0
+Nebraska,NE06,"1893, 1933",6th district: 1893–1933 (obsolete since the1930 census),0,0,0,NE,06,0,1,1930.0
+Nevada,NV01,"1864, 1983",At-large: 1864–1983 (obsolete),1,1,0,NV,01,1,1,
+Nevada,NV01,1983,1st district: 1983–present,1,0,1,NV,01,0,0,
+Nevada,NV02,1983,2nd district: 1983–present,1,0,1,NV,02,0,0,
+Nevada,NV03,2003,3rd district: 2003–present,1,0,1,NV,03,0,0,
+Nevada,NV04,2013,4th district: 2013–present,1,0,1,NV,04,0,0,
+New Hampshire,NH01,"1789, 1847",At-large: 1789–1847 (obsolete),0,0,0,NH,01,1,1,
+New Hampshire,NH01,1847,1st district: 1847–present,0,0,0,NH,01,0,0,
+New Hampshire,NH02,1847,2nd district: 1847–present,0,0,0,NH,02,0,0,
+New Hampshire,NH03,"1847, 1883",3rd district: 1847–1883 (obsolete since the1880 census),0,0,0,NH,03,0,1,1880.0
+New Hampshire,NH04,"1847, 1853",4th district: 1847–1853 (obsolete since the1850 census),0,0,0,NH,04,0,1,1850.0
+New Jersey,NJ01,"1789, 1799, 1801, 1813, 1815, 1843","At-large: 1789–1799, 1801–1813, 1815–1843 (obsolete)",0,0,0,NJ,01,1,1,
+New Jersey,NJ01,"1799, 1801, 1813, 1815, 1843","1st district: 1799–1801, 1813–1815, 1843–present",0,0,0,NJ,01,0,0,
+New Jersey,NJ02,"1799, 1801, 1813, 1815, 1843","2nd district: 1799–1801, 1813–1815, 1843–present",0,0,0,NJ,02,0,0,
+New Jersey,NJ03,"1799, 1801, 1813, 1815, 1843","3rd district: 1799–1801, 1813–1815, 1843–present",0,0,0,NJ,03,0,0,
+New Jersey,NJ04,"1799, 1801, 1843","4th district: 1799–1801, 1843–present",0,0,0,NJ,04,0,0,
+New Jersey,NJ05,"1799, 1801, 1843","5th district: 1799–1801, 1843–present",0,0,0,NJ,05,0,0,
+New Jersey,NJ06,1873,6th district: 1873–present,0,0,0,NJ,06,0,0,
+New Jersey,NJ07,1873,7th district: 1873–present,0,0,0,NJ,07,0,0,
+New Jersey,NJ08,1893,8th district: 1893–present,0,0,0,NJ,08,0,0,
+New Jersey,NJ09,1903,9th district: 1903–present,0,0,0,NJ,09,0,0,
+New Jersey,NJ10,1903,10th district: 1903–present,0,0,0,NJ,10,0,0,
+New Jersey,NJ11,1913,11th district: 1913–present,0,0,0,NJ,11,0,0,
+New Jersey,NJ12,1913,12th district: 1913–present,0,0,0,NJ,12,0,0,
+New Jersey,NJ13,"1933, 2013",13th district: 1933–2013 (obsolete since the2010 census),1,1,0,NJ,13,0,1,2010.0
+New Jersey,NJ14,"1933, 1993",14th district: 1933–1993 (obsolete since the1990 census),1,1,0,NJ,14,0,1,1990.0
+New Jersey,NJ15,"1963, 1983",15th district: 1963–1983 (obsolete since the1980 census),1,1,0,NJ,15,0,1,1980.0
+New Mexico,NM01,"1912, 1969",At-large: 1912–1969 (obsolete),0,0,0,NM,01,1,1,
+New Mexico,NM01,1969,1st district: 1969–present,0,0,0,NM,01,0,0,
+New Mexico,NM02,1969,2nd district: 1969–present,0,0,0,NM,02,0,0,
+New Mexico,NM03,1983,3rd district: 1983–present,1,0,1,NM,03,0,0,
+New York,NY01,"1873, 1875, 1883, 1885, 1933, 1945","At-large: 1873–1875, 1883–1885, 1933–1945 (obsolete)",0,0,0,NY,01,1,1,
+New York,NY01,1789,1st district: 1789–present,0,0,0,NY,01,0,0,
+New York,NY02,1789,2nd district: 1789–present,0,0,0,NY,02,0,0,
+New York,NY03,1789,3rd district: 1789–present,0,0,0,NY,03,0,0,
+New York,NY04,1789,4th district: 1789–present,0,0,0,NY,04,0,0,
+New York,NY05,1789,5th district: 1789–present,0,0,0,NY,05,0,0,
+New York,NY06,1789,6th district: 1789–present,0,0,0,NY,06,0,0,
+New York,NY07,1793,7th district: 1793–present,0,0,0,NY,07,0,0,
+New York,NY08,1793,8th district: 1793–present,0,0,0,NY,08,0,0,
+New York,NY09,1793,9th district: 1793–present,0,0,0,NY,09,0,0,
+New York,NY10,1793,10th district: 1793–present,0,0,0,NY,10,0,0,
+New York,NY11,1803,11th district: 1803–present,0,0,0,NY,11,0,0,
+New York,NY12,1803,12th district: 1803–present,0,0,0,NY,12,0,0,
+New York,NY13,1803,13th district: 1803–present,0,0,0,NY,13,0,0,
+New York,NY14,1803,14th district: 1803–present,0,0,0,NY,14,0,0,
+New York,NY15,1803,15th district: 1803–present,0,0,0,NY,15,0,0,
+New York,NY16,"1803, 1809, 1813","16th district: 1803–1809, 1813–present",0,0,0,NY,16,0,0,
+New York,NY17,"1803, 1809, 1813","17th district: 1803–1809, 1813–present",0,0,0,NY,17,0,0,
+New York,NY18,1813,18th district: 1813–present,0,0,0,NY,18,0,0,
+New York,NY19,1813,19th district: 1813–present,0,0,0,NY,19,0,0,
+New York,NY20,1813,20th district: 1813–present,0,0,0,NY,20,0,0,
+New York,NY21,1813,21st district: 1813–present,0,0,0,NY,21,0,0,
+New York,NY22,1821,22nd district: 1821–present,0,0,0,NY,22,0,0,
+New York,NY23,1823,23rd district: 1823–present,0,0,0,NY,23,0,0,
+New York,NY24,1823,24th district: 1823–present,0,0,0,NY,24,0,0,
+New York,NY25,1823,25th district: 1823–present,0,0,0,NY,25,0,0,
+New York,NY26,1823,26th district: 1823–present,0,0,0,NY,26,0,0,
+New York,NY27,"1823, 2023",27th district: 1823–2023 (obsolete since the2020 census),1,1,0,NY,27,0,1,2020.0
+New York,NY28,"1823, 2013",28th district: 1823–2013 (obsolete since the2010 census),1,1,0,NY,28,0,1,2010.0
+New York,NY29,"1823, 2013",29th district: 1823–2013 (obsolete since the2010 census),1,1,0,NY,29,0,1,2010.0
+New York,NY30,"1823, 2003",30th district: 1823–2003 (obsolete since the2000 census),1,1,0,NY,30,0,1,2000.0
+New York,NY31,"1833, 2003",31st district: 1833–2003 (obsolete since the2000 census),1,1,0,NY,31,0,1,2000.0
+New York,NY32,"1833, 1863, 1873, 1993","32nd district: 1833–1863, 1873–1993 (obsolete since the1990 census)",1,1,0,NY,32,0,1,1990.0
+New York,NY33,"1833, 1863, 1875, 1993","33rd district: 1833–1863, 1875–1993 (obsolete since the1990 census)",1,1,0,NY,33,0,1,1990.0
+New York,NY34,"1843, 1853, 1885, 1993","34th district: 1843–1853, 1885–1993 (obsolete since the1990 census)",1,1,0,NY,34,0,1,1990.0
+New York,NY35,"1903, 1983",35th district: 1903–1983 (obsolete since the1980 census),1,1,0,NY,35,0,1,1980.0
+New York,NY36,"1903, 1983",36th district: 1903–1983 (obsolete since the1980 census),1,1,0,NY,36,0,1,1980.0
+New York,NY37,"1903, 1983",37th district: 1903–1983 (obsolete since the1980 census),1,1,0,NY,37,0,1,1980.0
+New York,NY38,"1913, 1983",38th district: 1913–1983 (obsolete since the1980 census),1,1,0,NY,38,0,1,1980.0
+New York,NY39,"1913, 1983",39th district: 1913–1983 (obsolete since the1980 census),1,1,0,NY,39,0,1,1980.0
+New York,NY40,"1913, 1973",40th district: 1913–1973 (obsolete since the1970 census),0,0,0,NY,40,0,1,1970.0
+New York,NY41,"1913, 1973",41st district: 1913–1973 (obsolete since the1970 census),0,0,0,NY,41,0,1,1970.0
+New York,NY42,"1913, 1963",42nd district: 1913–1963 (obsolete since the1960 census),0,0,0,NY,42,0,1,1960.0
+New York,NY43,"1913, 1963",43rd district: 1913–1963 (obsolete since the1960 census),0,0,0,NY,43,0,1,1960.0
+New York,NY44,"1945, 1953",44th district: 1945–1953 (obsolete since the1950 census),0,0,0,NY,44,0,1,1950.0
+New York,NY45,"1945, 1953",45th district: 1945–1953 (obsolete since the1950 census),0,0,0,NY,45,0,1,1950.0
+North Carolina,NC01,"1883, 1885",At-large: 1883–1885 (obsolete),0,0,0,NC,01,1,1,
+North Carolina,NC01,1789,1st district: 1789–present,0,0,0,NC,01,0,0,
+North Carolina,NC02,1789,2nd district: 1789–present,0,0,0,NC,02,0,0,
+North Carolina,NC03,1789,3rd district: 1789–present,0,0,0,NC,03,0,0,
+North Carolina,NC04,1789,4th district: 1789–present,0,0,0,NC,04,0,0,
+North Carolina,NC05,1789,5th district: 1789–present,0,0,0,NC,05,0,0,
+North Carolina,NC06,1793,6th district: 1793–present,0,0,0,NC,06,0,0,
+North Carolina,NC07,1793,7th district: 1793–present,0,0,0,NC,07,0,0,
+North Carolina,NC08,"1793, 1863, 1873","8th district: 1793–1863, 1873–present",0,0,0,NC,08,0,0,
+North Carolina,NC09,"1793, 1853, 1885","9th district: 1793–1853, 1885–present",0,0,0,NC,09,0,0,
+North Carolina,NC10,"1793, 1843, 1903","10th district: 1793–1843, 1903–present",0,0,0,NC,10,0,0,
+North Carolina,NC11,"1803, 1843, 1933","11th district: 1803–1843, 1933–present",0,0,0,NC,11,0,0,
+North Carolina,NC12,"1803, 1843, 1943, 1963, 1993","12th district: 1803–1843, 1943–1963, 1993–present",1,0,1,NC,12,0,0,
+North Carolina,NC13,"1813, 1843, 2003","13th district: 1813–1843, 2003–present",1,0,1,NC,13,0,0,
+North Carolina,NC14,2023,14th district: 2023–present,1,0,1,NC,14,0,0,
+North Dakota,ND01,"1889, 1913, 1933, 1963, 1973","At-large: 1889–1913, 1933–1963, 1973–present",0,0,0,ND,01,1,0,
+North Dakota,ND01,"1913, 1933, 1963, 1973","1st district: 1913–1933, 1963–1973 (obsolete since the1970 census)",0,0,0,ND,01,0,1,1970.0
+North Dakota,ND02,"1913, 1933, 1963, 1973","2nd district: 1913–1933, 1963–1973 (obsolete since the1970 census)",0,0,0,ND,02,0,1,1970.0
+North Dakota,ND03,"1913, 1933",3rd district: 1913–1933 (obsolete since the1930 census),0,0,0,ND,03,0,1,1930.0
+Ohio,OH01,"1803, 1813, 1913, 1915, 1933, 1953, 1963, 1967","At-large: 1803–1813, 1913–1915, 1933–1953, 1963–1967 (obsolete)",0,0,0,OH,01,1,1,
+Ohio,OH01,1813,1st district: 1813–present,0,0,0,OH,01,0,0,
+Ohio,OH02,1813,2nd district: 1813–present,0,0,0,OH,02,0,0,
+Ohio,OH03,1813,3rd district: 1813–present,0,0,0,OH,03,0,0,
+Ohio,OH04,1813,4th district: 1813–present,0,0,0,OH,04,0,0,
+Ohio,OH05,1813,5th district: 1813–present,0,0,0,OH,05,0,0,
+Ohio,OH06,1813,6th district: 1813–present,0,0,0,OH,06,0,0,
+Ohio,OH07,1823,7th district: 1823–present,0,0,0,OH,07,0,0,
+Ohio,OH08,1823,8th district: 1823–present,0,0,0,OH,08,0,0,
+Ohio,OH09,1823,9th district: 1823–present,0,0,0,OH,09,0,0,
+Ohio,OH10,1823,10th district: 1823–present,0,0,0,OH,10,0,0,
+Ohio,OH11,1823,11th district: 1823–present,0,0,0,OH,11,0,0,
+Ohio,OH12,1823,12th district: 1823–present,0,0,0,OH,12,0,0,
+Ohio,OH13,1823,13th district: 1823–present,0,0,0,OH,13,0,0,
+Ohio,OH14,1823,14th district: 1823–present,0,0,0,OH,14,0,0,
+Ohio,OH15,1833,15th district: 1833–present,0,0,0,OH,15,0,0,
+Ohio,OH16,"1833, 2023",16th district: 1833–2023 (obsolete since the2020 census),1,1,0,OH,16,0,1,2020.0
+Ohio,OH17,"1833, 2013",17th district: 1833–2013 (obsolete since the2010 census),1,1,0,OH,17,0,1,2010.0
+Ohio,OH18,"1833, 2013",18th district: 1833–2013 (obsolete since the2010 census),1,1,0,OH,18,0,1,2010.0
+Ohio,OH19,"1833, 2003",19th district: 1833–2003 (obsolete since the2000 census),1,1,0,OH,19,0,1,2000.0
+Ohio,OH20,"1843, 1863, 1873, 1993","20th district: 1843–1863, 1873–1993 (obsolete since the1990 census)",1,1,0,OH,20,0,1,1990.0
+Ohio,OH21,"1843, 1863, 1883, 1993","21st district: 1843–1863, 1883–1993 (obsolete since the1990 census)",1,1,0,OH,21,0,1,1990.0
+Ohio,OH22,"1915, 1983",22nd district: 1915–1983 (obsolete since the1980 census),1,1,0,OH,22,0,1,1980.0
+Ohio,OH23,"1953, 1983",23rd district: 1953–1983 (obsolete since the1980 census),1,1,0,OH,23,0,1,1980.0
+Ohio,OH24,"1967, 1973",24th district: 1967–1973 (obsolete since the1970 census),0,0,0,OH,24,0,1,1970.0
+Oklahoma,OK01,"1913, 1915, 1933, 1943","At-large: 1913–1915, 1933–1943 (obsolete)",0,0,0,OK,01,1,1,
+Oklahoma,OK01,1907,1st district: 1907–present,0,0,0,OK,01,0,0,
+Oklahoma,OK02,1907,2nd district: 1907–present,0,0,0,OK,02,0,0,
+Oklahoma,OK03,1907,3rd district: 1907–present,0,0,0,OK,03,0,0,
+Oklahoma,OK04,1907,4th district: 1907–present,0,0,0,OK,04,0,0,
+Oklahoma,OK05,1907,5th district: 1907–present,0,0,0,OK,05,0,0,
+Oklahoma,OK06,"1915, 2003",6th district: 1915–2003 (obsolete since the2000 census),1,1,0,OK,06,0,1,2000.0
+Oklahoma,OK07,"1915, 1953",7th district: 1915–1953 (obsolete since the1950 census),0,0,0,OK,07,0,1,1950.0
+Oklahoma,OK08,"1915, 1953",8th district: 1915–1953 (obsolete since the1950 census),0,0,0,OK,08,0,1,1950.0
+Oregon,OR01,"1859, 1893",At-large: 1859–1893 (obsolete),0,0,0,OR,01,1,1,
+Oregon,OR01,1893,1st district: 1893–present,0,0,0,OR,01,0,0,
+Oregon,OR02,1893,2nd district: 1893–present,0,0,0,OR,02,0,0,
+Oregon,OR03,1913,3rd district: 1913–present,0,0,0,OR,03,0,0,
+Oregon,OR04,1943,4th district: 1943–present,0,0,0,OR,04,0,0,
+Oregon,OR05,1983,5th district: 1983–present,1,0,1,OR,05,0,0,
+Oregon,OR06,2023,6th district: 2023–present,1,0,1,OR,06,0,0,
+Pennsylvania,PA01,"1789, 1791, 1793, 1795, 1873, 1875, 1883, 1889, 1893, 1903, 1913, 1923, 1943, 1945","At-large: 1789–1791, 1793–1795, 1873–1875, 1883–1889, 1893–1903, 1913–1923, 1943–1945 (obsolete)",0,0,0,PA,01,1,1,
+Pennsylvania,PA01,"1791, 1793, 1795","1st district: 1791–1793, 1795–present",0,0,0,PA,01,0,0,
+Pennsylvania,PA02,"1791, 1793, 1795","2nd district: 1791–1793, 1795–present",0,0,0,PA,02,0,0,
+Pennsylvania,PA03,"1791, 1793, 1795","3rd district: 1791–1793, 1795–present",0,0,0,PA,03,0,0,
+Pennsylvania,PA04,"1791, 1793, 1795","4th district: 1791–1793, 1795–present",0,0,0,PA,04,0,0,
+Pennsylvania,PA05,"1791, 1793, 1795","5th district: 1791–1793, 1795–present",0,0,0,PA,05,0,0,
+Pennsylvania,PA06,"1791, 1793, 1795","6th district: 1791–1793, 1795–present",0,0,0,PA,06,0,0,
+Pennsylvania,PA07,"1791, 1793, 1795","7th district: 1791–1793, 1795–present",0,0,0,PA,07,0,0,
+Pennsylvania,PA08,"1791, 1793, 1795","8th district: 1791–1793, 1795–present",0,0,0,PA,08,0,0,
+Pennsylvania,PA09,1795,9th district: 1795–present,0,0,0,PA,09,0,0,
+Pennsylvania,PA10,1795,10th district: 1795–present,0,0,0,PA,10,0,0,
+Pennsylvania,PA11,1795,11th district: 1795–present,0,0,0,PA,11,0,0,
+Pennsylvania,PA12,"1795, 1803, 1813","12th district: 1795–1803, 1813–present",0,0,0,PA,12,0,0,
+Pennsylvania,PA13,1813,13th district: 1813–present,0,0,0,PA,13,0,0,
+Pennsylvania,PA14,1813,14th district: 1813–present,0,0,0,PA,14,0,0,
+Pennsylvania,PA15,1813,15th district: 1813–present,0,0,0,PA,15,0,0,
+Pennsylvania,PA16,1823,16th district: 1823–present,0,0,0,PA,16,0,0,
+Pennsylvania,PA17,1823,17th district: 1823–present,0,0,0,PA,17,0,0,
+Pennsylvania,PA18,"1823, 2023",18th district: 1823–2023 (obsolete since the2020 census),1,1,0,PA,18,0,1,2020.0
+Pennsylvania,PA19,"1833, 2013",19th district: 1833–2013 (obsolete since the2010 census),1,1,0,PA,19,0,1,2010.0
+Pennsylvania,PA20,"1833, 2003",20th district: 1833–2003 (obsolete since the2000 census),1,1,0,PA,20,0,1,2000.0
+Pennsylvania,PA21,"1833, 2003",21st district: 1833–2003 (obsolete since the2000 census),1,1,0,PA,21,0,1,2000.0
+Pennsylvania,PA22,"1833, 1993",22nd district: 1833–1993 (obsolete since the1990 census),1,1,0,PA,22,0,1,1990.0
+Pennsylvania,PA23,"1833, 1993",23rd district: 1833–1993 (obsolete since the1990 census),1,1,0,PA,23,0,1,1990.0
+Pennsylvania,PA24,"1833, 1983",24th district: 1833–1983 (obsolete since the1980 census),1,1,0,PA,24,0,1,1980.0
+Pennsylvania,PA25,"1833, 1843, 1853, 1863, 1875, 1983","25th district: 1833–1843, 1853–1863, 1875–1983 (obsolete since the1980 census)",1,1,0,PA,25,0,1,1980.0
+Pennsylvania,PA26,"1875, 1973",26th district: 1875–1973 (obsolete since the1970 census),0,0,0,PA,26,0,1,1970.0
+Pennsylvania,PA27,"1875, 1973",27th district: 1875–1973 (obsolete since the1970 census),0,0,0,PA,27,0,1,1970.0
+Pennsylvania,PA28,"1889, 1963",28th district: 1889–1963 (obsolete since the1960 census),0,0,0,PA,28,0,1,1960.0
+Pennsylvania,PA29,"1903, 1963",29th district: 1903–1963 (obsolete since the1960 census),0,0,0,PA,29,0,1,1960.0
+Pennsylvania,PA30,"1903, 1963",30th district: 1903–1963 (obsolete since the1960 census),0,0,0,PA,30,0,1,1960.0
+Pennsylvania,PA31,"1903, 1953",31st district: 1903–1953 (obsolete since the1950 census),0,0,0,PA,31,0,1,1950.0
+Pennsylvania,PA32,"1903, 1953",32nd district: 1903–1953 (obsolete since the1950 census),0,0,0,PA,32,0,1,1950.0
+Pennsylvania,PA33,"1923, 1953",33rd district: 1923–1953 (obsolete since the1950 census),0,0,0,PA,33,0,1,1950.0
+Pennsylvania,PA34,"1923, 1943",34th district: 1923–1943 (obsolete since the1940 census),0,0,0,PA,34,0,1,1940.0
+Pennsylvania,PA35,"1923, 1933",35th district: 1923–1933 (obsolete since the1930 census),0,0,0,PA,35,0,1,1930.0
+Pennsylvania,PA36,"1923, 1933",36th district: 1923–1933 (obsolete since the1930 census),0,0,0,PA,36,0,1,1930.0
+Rhode Island,RI01,"1790, 1843",At-large: 1790–1843 (obsolete),0,0,0,RI,01,1,1,
+Rhode Island,RI01,1843,1st district: 1843–present,0,0,0,RI,01,0,0,
+Rhode Island,RI02,1843,2nd district: 1843–present,0,0,0,RI,02,0,0,
+Rhode Island,RI03,"1913, 1933",3rd district: 1913–1933 (obsolete since the1930 census),0,0,0,RI,03,0,1,1930.0
+South Carolina,SC01,"1873, 1875",At-large: 1873–1875 (obsolete),0,0,0,SC,01,1,1,
+South Carolina,SC01,1789,1st district: 1789–present,0,0,0,SC,01,0,0,
+South Carolina,SC02,1789,2nd district: 1789–present,0,0,0,SC,02,0,0,
+South Carolina,SC03,1789,3rd district: 1789–present,0,0,0,SC,03,0,0,
+South Carolina,SC04,1789,4th district: 1789–present,0,0,0,SC,04,0,0,
+South Carolina,SC05,"1789, 1863, 1875","5th district: 1789–1863, 1875–present",0,0,0,SC,05,0,0,
+South Carolina,SC06,"1793, 1863, 1883","6th district: 1793–1863, 1883–present",0,0,0,SC,06,0,0,
+South Carolina,SC07,"1803, 1853, 1883, 1933, 2013","7th district: 1803–1853, 1883–1933, 2013–present",1,0,1,SC,07,0,0,
+South Carolina,SC08,"1803, 1843",8th district: 1803–1843 (obsolete since the1840 census),0,0,0,SC,08,0,1,1840.0
+South Carolina,SC09,"1813, 1843",9th district: 1813–1843 (obsolete since the1840 census),0,0,0,SC,09,0,1,1840.0
+South Dakota,SD01,"1889, 1913, 1983","At-large: 1889–1913, 1983–present",1,0,1,SD,01,1,0,
+South Dakota,SD01,"1913, 1983",1st district: 1913–1983 (obsolete since the1980 census),1,1,0,SD,01,0,1,1980.0
+South Dakota,SD02,"1913, 1983",2nd district: 1913–1983 (obsolete since the1980 census),1,1,0,SD,02,0,1,1980.0
+South Dakota,SD03,"1913, 1933",3rd district: 1913–1933 (obsolete since the1930 census),0,0,0,SD,03,0,1,1930.0
+Tennessee,TN01,"1796, 1805, 1873, 1875","At-large: 1796–1805, 1873–1875 (obsolete)",0,0,0,TN,01,1,1,
+Tennessee,TN01,1805,1st district: 1805–present,0,0,0,TN,01,0,0,
+Tennessee,TN02,1805,2nd district: 1805–present,0,0,0,TN,02,0,0,
+Tennessee,TN03,1805,3rd district: 1805–present,0,0,0,TN,03,0,0,
+Tennessee,TN04,1813,4th district: 1813–present,0,0,0,TN,04,0,0,
+Tennessee,TN05,1813,5th district: 1813–present,0,0,0,TN,05,0,0,
+Tennessee,TN06,1813,6th district: 1813–present,0,0,0,TN,06,0,0,
+Tennessee,TN07,1823,7th district: 1823–present,0,0,0,TN,07,0,0,
+Tennessee,TN08,1823,8th district: 1823–present,0,0,0,TN,08,0,0,
+Tennessee,TN09,"1823, 1863, 1873, 1973, 1983","9th district: 1823–1863, 1873–1973, 1983–present",1,0,1,TN,09,0,0,
+Tennessee,TN10,"1833, 1863, 1875, 1933, 1943, 1953","10th district: 1833–1863, 1875–1933, 1943–1953 (obsolete since the1950 census)",0,0,0,TN,10,0,1,1950.0
+Tennessee,TN11,"1833, 1853",11th district: 1833–1853 (obsolete since the1850 census),0,0,0,TN,11,0,1,1850.0
+Tennessee,TN12,"1833, 1843",12th district: 1833–1843 (obsolete since the1840 census),0,0,0,TN,12,0,1,1840.0
+Tennessee,TN13,"1833, 1843",13th district: 1833–1843 (obsolete since the1840 census),0,0,0,TN,13,0,1,1840.0
+Texas,TX01,"1873, 1875, 1913, 1919, 1933, 1935, 1953, 1959, 1963, 1967","At-large: 1873–1875, 1913–1919, 1933–1935, 1953–1959, 1963–1967 (obsolete)",0,0,0,TX,01,1,1,
+Texas,TX01,1845,1st district: 1845–present,0,0,0,TX,01,0,0,
+Texas,TX02,1845,2nd district: 1845–present,0,0,0,TX,02,0,0,
+Texas,TX03,1863,3rd district: 1863–present,0,0,0,TX,03,0,0,
+Texas,TX04,1863,4th district: 1863–present,0,0,0,TX,04,0,0,
+Texas,TX05,1875,5th district: 1875–present,0,0,0,TX,05,0,0,
+Texas,TX06,1875,6th district: 1875–present,0,0,0,TX,06,0,0,
+Texas,TX07,1883,7th district: 1883–present,0,0,0,TX,07,0,0,
+Texas,TX08,1883,8th district: 1883–present,0,0,0,TX,08,0,0,
+Texas,TX09,1883,9th district: 1883–present,0,0,0,TX,09,0,0,
+Texas,TX10,1883,10th district: 1883–present,0,0,0,TX,10,0,0,
+Texas,TX11,1883,11th district: 1883–present,0,0,0,TX,11,0,0,
+Texas,TX12,1893,12th district: 1893–present,0,0,0,TX,12,0,0,
+Texas,TX13,1893,13th district: 1893–present,0,0,0,TX,13,0,0,
+Texas,TX14,1903,14th district: 1903–present,0,0,0,TX,14,0,0,
+Texas,TX15,1903,15th district: 1903–present,0,0,0,TX,15,0,0,
+Texas,TX16,1903,16th district: 1903–present,0,0,0,TX,16,0,0,
+Texas,TX17,1919,17th district: 1919–present,0,0,0,TX,17,0,0,
+Texas,TX18,1919,18th district: 1919–present,0,0,0,TX,18,0,0,
+Texas,TX19,1935,19th district: 1935–present,0,0,0,TX,19,0,0,
+Texas,TX20,1935,20th district: 1935–present,0,0,0,TX,20,0,0,
+Texas,TX21,1935,21st district: 1935–present,0,0,0,TX,21,0,0,
+Texas,TX22,1959,22nd district: 1959–present,0,0,0,TX,22,0,0,
+Texas,TX23,1967,23rd district: 1967–present,0,0,0,TX,23,0,0,
+Texas,TX24,1973,24th district: 1973–present,0,0,0,TX,24,0,0,
+Texas,TX25,1983,25th district: 1983–present,1,0,1,TX,25,0,0,
+Texas,TX26,1983,26th district: 1983–present,1,0,1,TX,26,0,0,
+Texas,TX27,1983,27th district: 1983–present,1,0,1,TX,27,0,0,
+Texas,TX28,1993,28th district: 1993–present,1,0,1,TX,28,0,0,
+Texas,TX29,1993,29th district: 1993–present,1,0,1,TX,29,0,0,
+Texas,TX30,1993,30th district: 1993–present,1,0,1,TX,30,0,0,
+Texas,TX31,2003,31st district: 2003–present,1,0,1,TX,31,0,0,
+Texas,TX32,2003,32nd district: 2003–present,1,0,1,TX,32,0,0,
+Texas,TX33,2013,33rd district: 2013–present,1,0,1,TX,33,0,0,
+Texas,TX34,2013,34th district: 2013–present,1,0,1,TX,34,0,0,
+Texas,TX35,2013,35th district: 2013–present,1,0,1,TX,35,0,0,
+Texas,TX36,2013,36th district: 2013–present,1,0,1,TX,36,0,0,
+Texas,TX37,2023,37th district: 2023–present,1,0,1,TX,37,0,0,
+Texas,TX38,2023,38th district: 2023–present,1,0,1,TX,38,0,0,
+Utah,UT01,"1896, 1913",At-large: 1896–1913 (obsolete),0,0,0,UT,01,1,1,
+Utah,UT01,1913,1st district: 1913–present,0,0,0,UT,01,0,0,
+Utah,UT02,1913,2nd district: 1913–present,0,0,0,UT,02,0,0,
+Utah,UT03,1983,3rd district: 1983–present,1,0,1,UT,03,0,0,
+Utah,UT04,2013,4th district: 2013–present,1,0,1,UT,04,0,0,
+Vermont,VT01,"1813, 1821, 1823, 1825, 1933","At-large: 1813–1821, 1823–1825, 1933–present",0,0,0,VT,01,1,0,
+Vermont,VT01,"1791, 1813, 1821, 1823, 1825, 1933","1st district: 1791–1813, 1821–1823, 1825–1933 (obsolete since the1930 census)",0,0,0,VT,01,0,1,1930.0
+Vermont,VT02,"1791, 1813, 1821, 1823, 1825, 1933","2nd district: 1791–1813, 1821–1823, 1825–1933 (obsolete since the1930 census)",0,0,0,VT,02,0,1,1930.0
+Vermont,VT03,"1803, 1813, 1821, 1823, 1825, 1883","3rd district: 1803–1813, 1821–1823, 1825–1883 (obsolete since the1880 census)",0,0,0,VT,03,0,1,1880.0
+Vermont,VT04,"1803, 1813, 1821, 1823, 1825, 1853","4th district: 1803–1813, 1821–1823, 1825–1853 (obsolete since the1850 census)",0,0,0,VT,04,0,1,1850.0
+Vermont,VT05,"1821, 1823, 1825, 1843","5th district: 1821–1823, 1825–1843 (obsolete since the1840 census)",0,0,0,VT,05,0,1,1840.0
+Vermont,VT06,"1821, 1823",6th district: 1821–1823 (obsolete since the1820 census),0,0,0,VT,06,0,1,1820.0
+Virginia,VA01,"1883, 1885, 1933, 1935","At-large: 1883–1885, 1933–1935 (obsolete)",0,0,0,VA,01,1,1,
+Virginia,VA01,"1789, 1933, 1935","1st district: 1789–1933, 1935–present",0,0,0,VA,01,0,0,
+Virginia,VA02,"1789, 1933, 1935","2nd district: 1789–1933, 1935–present",0,0,0,VA,02,0,0,
+Virginia,VA03,"1789, 1933, 1935","3rd district: 1789–1933, 1935–present",0,0,0,VA,03,0,0,
+Virginia,VA04,"1789, 1933, 1935","4th district: 1789–1933, 1935–present",0,0,0,VA,04,0,0,
+Virginia,VA05,"1789, 1933, 1935","5th district: 1789–1933, 1935–present",0,0,0,VA,05,0,0,
+Virginia,VA06,"1789, 1933, 1935","6th district: 1789–1933, 1935–present",0,0,0,VA,06,0,0,
+Virginia,VA07,"1789, 1933, 1935","7th district: 1789–1933, 1935–present",0,0,0,VA,07,0,0,
+Virginia,VA08,"1789, 1933, 1935","8th district: 1789–1933, 1935–present",0,0,0,VA,08,0,0,
+Virginia,VA09,"1789, 1863, 1873, 1933, 1935","9th district: 1789–1863, 1873–1933, 1935–present",0,0,0,VA,09,0,0,
+Virginia,VA10,"1789, 1863, 1885, 1933, 1953","10th district: 1789–1863, 1885–1933, 1953–present",0,0,0,VA,10,0,0,
+Virginia,VA11,"1793, 1863, 1993","11th district: 1793–1863, 1993–present",1,0,1,VA,11,0,0,
+Virginia,VA12,"1793, 1863, 1863",12th district: 1793–1863 (obsolete since the 1863 move toWest Virginia),0,0,0,VA,12,0,1,1863.0
+Virginia,VA13,"1793, 1863, 1863",13th district: 1793–1863 (obsolete since the 1863 move toWest Virginia),0,0,0,VA,13,0,1,1863.0
+Virginia,VA14,"1793, 1853",14th district: 1793–1853 (obsolete since the1850 census),0,0,0,VA,14,0,1,1850.0
+Virginia,VA15,"1793, 1853",15th district: 1793–1853 (obsolete since the1850 census),0,0,0,VA,15,0,1,1850.0
+Virginia,VA16,"1793, 1843",16th district: 1793–1843 (obsolete since the1840 census),0,0,0,VA,16,0,1,1840.0
+Virginia,VA17,"1793, 1843",17th district: 1793–1843 (obsolete since the1840 census),0,0,0,VA,17,0,1,1840.0
+Virginia,VA18,"1793, 1843",18th district: 1793–1843 (obsolete since the1840 census),0,0,0,VA,18,0,1,1840.0
+Virginia,VA19,"1793, 1843",19th district: 1793–1843 (obsolete since the1840 census),0,0,0,VA,19,0,1,1840.0
+Virginia,VA20,"1803, 1843",20th district: 1803–1843 (obsolete since the1840 census),0,0,0,VA,20,0,1,1840.0
+Virginia,VA21,"1803, 1843",21st district: 1803–1843 (obsolete since the1840 census),0,0,0,VA,21,0,1,1840.0
+Virginia,VA22,"1803, 1833",22nd district: 1803–1833 (obsolete since the1830 census),0,0,0,VA,22,0,1,1830.0
+Virginia,VA23,"1813, 1823",23rd district: 1813–1823 (obsolete since the1820 census),0,0,0,VA,23,0,1,1820.0
+Washington,WA01,"1889, 1909, 1913, 1915, 1953, 1959","At-large: 1889–1909, 1913–1915, 1953–1959 (obsolete)",0,0,0,WA,01,1,1,
+Washington,WA01,1909,1st district: 1909–present,0,0,0,WA,01,0,0,
+Washington,WA02,1909,2nd district: 1909–present,0,0,0,WA,02,0,0,
+Washington,WA03,1909,3rd district: 1909–present,0,0,0,WA,03,0,0,
+Washington,WA04,1915,4th district: 1915–present,0,0,0,WA,04,0,0,
+Washington,WA05,1915,5th district: 1915–present,0,0,0,WA,05,0,0,
+Washington,WA06,1933,6th district: 1933–present,0,0,0,WA,06,0,0,
+Washington,WA07,1959,7th district: 1959–present,0,0,0,WA,07,0,0,
+Washington,WA08,1983,8th district: 1983–present,1,0,1,WA,08,0,0,
+Washington,WA09,1993,9th district: 1993–present,1,0,1,WA,09,0,0,
+Washington,WA10,2013,10th district: 2013–present,1,0,1,WA,10,0,0,
+West Virginia,WV01,"1913, 1917",At-large: 1913–1917 (obsolete),0,0,0,WV,01,1,1,
+West Virginia,WV01,1863,1st district: 1863–present,0,0,0,WV,01,0,0,
+West Virginia,WV02,1863,2nd district: 1863–present,0,0,0,WV,02,0,0,
+West Virginia,WV03,"1863, 2023",3rd district: 1863–2023 (obsolete due to the2020 census),1,1,0,WV,03,0,1,2020.0
+West Virginia,WV04,"1883, 1993",4th district: 1883–1993 (obsolete since the1990 census),1,1,0,WV,04,0,1,1990.0
+West Virginia,WV05,"1903, 1973",5th district: 1903–1973 (obsolete since the1970 census),0,0,0,WV,05,0,1,1970.0
+West Virginia,WV06,"1917, 1963",6th district: 1917–1963 (obsolete since the1960 census),0,0,0,WV,06,0,1,1960.0
+Wisconsin,WI01,1848,1st district: 1848–present,0,0,0,WI,01,0,0,
+Wisconsin,WI02,1848,2nd district: 1848–present,0,0,0,WI,02,0,0,
+Wisconsin,WI03,1849,3rd district: 1849–present,0,0,0,WI,03,0,0,
+Wisconsin,WI04,1863,4th district: 1863–present,0,0,0,WI,04,0,0,
+Wisconsin,WI05,1863,5th district: 1863–present,0,0,0,WI,05,0,0,
+Wisconsin,WI06,1863,6th district: 1863–present,0,0,0,WI,06,0,0,
+Wisconsin,WI07,1873,7th district: 1873–present,0,0,0,WI,07,0,0,
+Wisconsin,WI08,1873,8th district: 1873–present,0,0,0,WI,08,0,0,
+Wisconsin,WI09,"1883, 2003",9th district: 1883–2003 (obsolete since the2000 census),1,1,0,WI,09,0,1,2000.0
+Wisconsin,WI10,"1893, 1973",10th district: 1893–1973 (obsolete since the1970 census),0,0,0,WI,10,0,1,1970.0
+Wisconsin,WI11,"1903, 1933",11th district: 1903–1933 (obsolete since the1930 census),0,0,0,WI,11,0,1,1930.0
+Wyoming,WY01,1890,At-large: 1890–present,0,0,0,WY,01,1,0,
+American Samoa,AS01,1978,American Samoa At-large district (1978–present),0,0,0,AS,01,1,0,
+District of Columbia,DC01,"1871, 1875, 1971","District of Columbia At-large district (1871–1875, 1971–present)",0,0,0,DC,01,1,0,
+Guam,GU01,1970,Guam At-large district (1970–present),0,0,0,GU,01,1,0,
+Northern Mariana Islands,MP01,2009,Northern Mariana Islands At-large district (2009–present),1,0,1,MP,01,1,0,
+Puerto Rico,PR01,1901,Puerto Rico At-large district (1901–present),0,0,0,PR,01,1,0,
+United States Virgin Islands,VI01,1970,U.S. Virgin Islands At-large district (1970–present),0,0,0,VI,01,1,0,
